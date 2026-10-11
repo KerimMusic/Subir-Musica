@@ -300,7 +300,8 @@ onAuthStateChanged(auth, (user) => {
 });
 
 ['artista', 'titulo', 'imagen', 'album'].forEach(id => {
-  document.getElementById(id).addEventListener('input', actualizarPreview);
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', actualizarPreview);
 });
 
 function actualizarPreview() {
@@ -498,6 +499,10 @@ async function eliminarCancion(id, boton, titulo, cancion) {
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+
+  // Intercepta modo álbum (por si el usuario da Enter en un input)
+  if (modoSubida === 'album') { subirAlbum(); return; }
+
   if (!usuarioActual) { mostrarStatus('Debes iniciar sesión primero', 'error'); return; }
 
   if (!window.tieneAccesoVigente()) {
@@ -1133,15 +1138,10 @@ document.querySelectorAll('[data-close]').forEach(btn => {
 
 window.tieneAccesoVigente = function() {
   if (!usuarioActual || !suscripcionActual) return false;
-
   const est = String(suscripcionActual.estado || '').toLowerCase();
-
   if (est !== 'aprobado' && est !== 'activa') return false;
-
   const venc = tsToDate(suscripcionActual.fechaVencimiento);
-
   if (!venc) return true;
-
   return new Date() < venc;
 };
 
@@ -1779,3 +1779,178 @@ document.getElementById('tutorialBtn')?.addEventListener('click', () => {
   cerrarMenu();
   setTimeout(() => abrirModalSusc('modal-tutorial'), 120);
 });
+
+/* ═══════════════════════════════════════════════════════════════
+   💿 SUBIDA DE ÁLBUM COMPLETO
+   ═══════════════════════════════════════════════════════════════ */
+
+let modoSubida = 'single';
+
+const uploadModeBtns = document.querySelectorAll('#uploadMode .mode-btn');
+const singleModeWrap = document.getElementById('singleModeWrap');
+const albumModeWrap  = document.getElementById('albumModeWrap');
+const albumNombre    = document.getElementById('albumNombre');
+const albumCantidad  = document.getElementById('albumCantidad');
+const albumImagen    = document.getElementById('albumImagen');
+const albumSongsCont = document.getElementById('albumSongsContainer');
+const albumSubmitBtn = document.getElementById('albumSubmitBtn');
+
+uploadModeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const modo = btn.dataset.mode;
+    if (modo === modoSubida) return;
+    modoSubida = modo;
+    uploadModeBtns.forEach(b => b.classList.toggle('active', b === btn));
+    singleModeWrap?.classList.toggle('hidden', modo !== 'single');
+    albumModeWrap?.classList.toggle('hidden', modo !== 'album');
+  });
+});
+
+function crearFilaAlbum(num) {
+  const wrap = document.createElement('div');
+  wrap.className = 'album-song';
+  wrap.innerHTML = `
+    <div class="album-song-head">
+      <span class="album-song-title">Canción ${num}</span>
+    </div>
+    <div class="form-group">
+      <label>1. Nombre del artista</label>
+      <input type="text" class="alb-artista" placeholder="Ej: Artista">
+    </div>
+    <div class="form-group">
+      <label>2. Título de la canción</label>
+      <input type="text" class="alb-titulo" placeholder="Ej: Nombre de la canción">
+    </div>
+    <div class="form-group">
+      <label>3. Género musical</label>
+      <select class="alb-genero">
+        <option value="">Selecciona un género</option>
+        ${GENEROS.map(g => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>4. Link de audio (Dropbox)</label>
+      <input type="url" class="alb-audio"
+             placeholder="https://www.dropbox.com/s/.../cancion.mp3?dl=0">
+    </div>
+  `;
+  return wrap;
+}
+
+function renderAlbumSongs(cantidad) {
+  if (!albumSongsCont) return;
+  const n = Math.max(0, Math.min(50, parseInt(cantidad, 10) || 0));
+  const actuales = albumSongsCont.children.length;
+
+  if (n > actuales) {
+    for (let i = actuales; i < n; i++) {
+      albumSongsCont.appendChild(crearFilaAlbum(i + 1));
+    }
+  } else if (n < actuales) {
+    for (let i = actuales; i > n; i--) {
+      albumSongsCont.removeChild(albumSongsCont.lastElementChild);
+    }
+  }
+
+  Array.from(albumSongsCont.children).forEach((el, i) => {
+    const t = el.querySelector('.album-song-title');
+    if (t) t.textContent = 'Canción ' + (i + 1);
+  });
+}
+
+albumCantidad?.addEventListener('input', (e) => {
+  let n = parseInt(e.target.value, 10);
+  if (isNaN(n) || n < 1) { renderAlbumSongs(0); return; }
+  if (n > 50) { n = 50; e.target.value = 50; }
+  renderAlbumSongs(n);
+});
+
+async function subirAlbum() {
+  if (!usuarioActual) {
+    mostrarStatus('Debes iniciar sesión primero', 'error');
+    return;
+  }
+  if (!window.tieneAccesoVigente()) {
+    mostrarStatus('Necesitas una suscripción activa para subir música.', 'error');
+    abrirModalSusc('modal-susc');
+    return;
+  }
+
+  const nombreAlbum  = albumNombre.value.trim();
+  const imagenRaw    = albumImagen.value.trim();
+  const filas        = Array.from(albumSongsCont.querySelectorAll('.album-song'));
+
+  if (!nombreAlbum) {
+    mostrarStatus('Escribe el nombre del álbum', 'error');
+    albumNombre.focus();
+    return;
+  }
+  if (!filas.length) {
+    mostrarStatus('Agrega al menos una canción', 'error');
+    return;
+  }
+
+  const canciones = [];
+  for (let i = 0; i < filas.length; i++) {
+    const f = filas[i];
+    const artista  = f.querySelector('.alb-artista').value.trim();
+    const titulo   = f.querySelector('.alb-titulo').value.trim();
+    const genero   = f.querySelector('.alb-genero').value;
+    const audioRaw = f.querySelector('.alb-audio').value.trim();
+
+    if (!artista || !titulo || !audioRaw) {
+      mostrarStatus(`Completa artista, título y audio en la canción ${i + 1}`, 'error');
+      f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    canciones.push({ artista, titulo, genero, audioRaw });
+  }
+
+  const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
+
+  albumSubmitBtn.disabled = true;
+  albumSubmitBtn.innerHTML = '<span class="loader"></span>Subiendo álbum...';
+  mostrarStatus(`Subiendo álbum (${canciones.length} canciones)...`, 'loading');
+
+  try {
+    const uid = usuarioActual.uid;
+    for (const c of canciones) {
+      const audioUrl = dropboxDirecto(c.audioRaw);
+      await addDoc(collection(db, 'historial_usuarios', uid, 'canciones'), {
+        artista: c.artista,
+        titulo:  c.titulo,
+        album:   nombreAlbum,
+        genero:  c.genero || '',
+        subgenero: '',
+        colaboradores: [],
+        audioUrl,
+        imagenUrl,
+        origen: 'dropbox',
+        esAlbum: true,
+        albumNombre: nombreAlbum,
+        uid,
+        email: usuarioActual.email,
+        fecha: serverTimestamp()
+      });
+      await asegurarRegistroOyentes(c.titulo);
+    }
+
+    mostrarStatus(`✅ Álbum "${nombreAlbum}" subido correctamente (${canciones.length} canciones)`, 'ok');
+
+    albumNombre.value = '';
+    albumImagen.value = '';
+    albumCantidad.value = 1;
+    renderAlbumSongs(1);
+  } catch (err) {
+    console.error('Error al subir álbum:', err);
+    mostrarStatus('Error al guardar: ' + err.message, 'error');
+  } finally {
+    albumSubmitBtn.disabled = false;
+    albumSubmitBtn.textContent = 'Subir álbum completo';
+  }
+}
+
+albumSubmitBtn?.addEventListener('click', subirAlbum);
+
+/* Estado inicial: 1 canción de ejemplo */
+renderAlbumSongs(1);
