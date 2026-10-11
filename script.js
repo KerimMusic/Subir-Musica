@@ -1954,3 +1954,219 @@ albumSubmitBtn?.addEventListener('click', subirAlbum);
 
 /* Estado inicial: 1 canción de ejemplo */
 renderAlbumSongs(1);
+
+/* ═══════════════════════════════════════════════════════════════
+   📺 SUBIDA DESDE YOUTUBE
+   ═══════════════════════════════════════════════════════════════ */
+
+const youtubeModeWrap        = document.getElementById('youtubeModeWrap');
+const youtubeUrlInput        = document.getElementById('youtubeUrl');
+const youtubeLoader          = document.getElementById('youtubeLoader');
+const youtubeFields          = document.getElementById('youtubeFields');
+const ytArtista              = document.getElementById('ytArtista');
+const ytTitulo               = document.getElementById('ytTitulo');
+const ytAlbum                = document.getElementById('ytAlbum');
+const ytGenero               = document.getElementById('ytGenero');
+const youtubePreviewImg      = document.getElementById('youtubePreviewImg');
+const youtubePreviewTitulo   = document.getElementById('youtubePreviewTitulo');
+const youtubePreviewArtista  = document.getElementById('youtubePreviewArtista');
+const youtubeSubmitBtn       = document.getElementById('youtubeSubmitBtn');
+
+let ytVideoIdActual = null;
+
+/* ─── 1. Mostrar/ocultar el wrap al cambiar de modo ─── */
+uploadModeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const esYoutube = btn.dataset.mode === 'youtube';
+    youtubeModeWrap?.classList.toggle('hidden', !esYoutube);
+    if (!esYoutube) {
+      youtubeFields?.classList.add('hidden');
+      youtubeLoader?.classList.add('hidden');
+    }
+  });
+});
+
+/* ─── 2. Extraer ID del video desde cualquier formato de URL ─── */
+function extraerVideoId(url) {
+  if (!url) return null;
+  const txt = String(url).trim();
+  const m = txt.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/|music\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/
+  );
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9_-]{11}$/.test(txt)) return txt;
+  return null;
+}
+
+/* ─── 3. Preview en vivo mientras el usuario edita los campos ─── */
+function actualizarPreviewYouTube() {
+  youtubePreviewTitulo.textContent  = ytTitulo.value.trim()  || '—';
+  youtubePreviewArtista.textContent = ytArtista.value.trim() || '—';
+}
+['input', 'change'].forEach(ev => {
+  ytTitulo?.addEventListener(ev, actualizarPreviewYouTube);
+  ytArtista?.addEventListener(ev, actualizarPreviewYouTube);
+});
+
+/* ─── 4. Cargar metadatos vía oEmbed (portada + título + artista) ─── */
+async function cargarInfoYouTube() {
+  const url = youtubeUrlInput.value.trim();
+  if (!url) return;
+
+  const vid = extraerVideoId(url);
+  if (!vid) {
+    mostrarStatus('Enlace de YouTube no válido', 'error');
+    youtubeFields.classList.add('hidden');
+    return;
+  }
+
+  if (vid === ytVideoIdActual && !youtubeFields.classList.contains('hidden')) return;
+
+  ytVideoIdActual = vid;
+  youtubeLoader.classList.remove('hidden');
+  youtubeFields.classList.add('hidden');
+
+  try {
+    const watchUrl = 'https://www.youtube.com/watch?v=' + vid;
+    const endpoint = 'https://www.youtube.com/oembed?url=' +
+                     encodeURIComponent(watchUrl) + '&format=json';
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error('No se pudo obtener información del video');
+    const data = await res.json();
+
+    /* Portada */
+    const thumb = data.thumbnail_url ||
+                  ('https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg');
+    youtubePreviewImg.dataset.url = thumb;
+    youtubePreviewImg.src = thumb;
+    youtubePreviewImg.onerror = () => {
+      youtubePreviewImg.onerror = null;
+      const fallback = 'https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg';
+      youtubePreviewImg.dataset.url = fallback;
+      youtubePreviewImg.src = fallback;
+    };
+
+    /* Título */
+    if (data.title) ytTitulo.value = data.title;
+
+    /* Artista (canal) */
+    if (data.author_name) ytArtista.value = data.author_name;
+
+    /* El género no se expone por oEmbed → queda vacío por defecto */
+
+    actualizarPreviewYouTube();
+    youtubeLoader.classList.add('hidden');
+    youtubeFields.classList.remove('hidden');
+    mostrarStatus('✅ Información del video cargada', 'ok');
+  } catch (err) {
+    console.warn('YouTube info:', err);
+    youtubeLoader.classList.add('hidden');
+    mostrarStatus('No se pudo obtener toda la información. Completa los datos manualmente.', 'error');
+    /* Aun así dejamos los campos visibles para subida manual */
+    youtubeFields.classList.remove('hidden');
+  }
+}
+
+/* ─── 5. Disparadores para cargar la info ─── */
+youtubeUrlInput?.addEventListener('blur', cargarInfoYouTube);
+youtubeUrlInput?.addEventListener('paste', () => setTimeout(cargarInfoYouTube, 60));
+youtubeUrlInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); cargarInfoYouTube(); }
+});
+
+/* ─── 6. Evitar que Enter en los otros campos envíe el form original ─── */
+youtubeModeWrap?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+    e.preventDefault();
+    if (!youtubeFields.classList.contains('hidden')) {
+      subirDesdeYouTube();
+    } else {
+      cargarInfoYouTube();
+    }
+  }
+});
+
+/* ─── 7. Envío real ─── */
+async function subirDesdeYouTube() {
+  if (!usuarioActual) {
+    mostrarStatus('Debes iniciar sesión primero', 'error');
+    return;
+  }
+  if (!window.tieneAccesoVigente()) {
+    mostrarStatus('Necesitas una suscripción activa para subir música.', 'error');
+    abrirModalSusc('modal-susc');
+    return;
+  }
+
+  const url = youtubeUrlInput.value.trim();
+  const vid = extraerVideoId(url);
+  if (!vid) {
+    mostrarStatus('Ingresa un enlace de YouTube válido', 'error');
+    youtubeUrlInput.focus();
+    return;
+  }
+
+  const artista = ytArtista.value.trim();
+  const titulo  = ytTitulo.value.trim();
+  const album   = ytAlbum.value.trim();
+  const genero  = ytGenero.value.trim();
+
+  if (!artista || !titulo) {
+    mostrarStatus('Completa artista y título', 'error');
+    return;
+  }
+
+  const audioUrl  = 'https://www.youtube.com/watch?v=' + vid;
+  const imagenUrl = youtubePreviewImg.dataset.url ||
+                    ('https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg');
+
+  youtubeSubmitBtn.disabled = true;
+  youtubeSubmitBtn.innerHTML = '<span class="loader"></span>Guardando...';
+  mostrarStatus('Guardando canción de YouTube...', 'loading');
+
+  try {
+    const uid = usuarioActual.uid;
+    await addDoc(collection(db, 'historial_usuarios', uid, 'canciones'), {
+      artista,
+      titulo,
+      album,
+      genero,
+      subgenero: '',
+      colaboradores: [],
+      audioUrl,
+      imagenUrl,
+      origen: 'youtube',
+      youtubeId: vid,
+      youtubeUrl: audioUrl,
+      uid,
+      email: usuarioActual.email,
+      fecha: serverTimestamp()
+    });
+
+    await asegurarRegistroOyentes(titulo);
+    mostrarStatus('✅ Canción de YouTube subida correctamente', 'ok');
+
+    /* Reset */
+    youtubeUrlInput.value = '';
+    ytArtista.value = '';
+    ytTitulo.value = '';
+    ytAlbum.value = '';
+    ytGenero.value = '';
+    youtubePreviewImg.dataset.url = '';
+    youtubePreviewImg.src = '';
+    youtubePreviewTitulo.textContent = '—';
+    youtubePreviewArtista.textContent = '—';
+    ytVideoIdActual = null;
+    youtubeFields.classList.add('hidden');
+
+    youtubeSubmitBtn.disabled = false;
+    youtubeSubmitBtn.textContent = 'Subir canción';
+  } catch (err) {
+    console.error('Error al guardar YouTube:', err);
+    mostrarStatus('Error al guardar: ' + err.message, 'error');
+    youtubeSubmitBtn.disabled = false;
+    youtubeSubmitBtn.textContent = 'Subir canción';
+  }
+}
+
+youtubeSubmitBtn?.addEventListener('click', subirDesdeYouTube);
