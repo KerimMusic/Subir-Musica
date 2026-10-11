@@ -63,6 +63,7 @@
         <div class="upload-mode" id="uploadMode">
           <button type="button" class="mode-btn active" data-mode="single">🎵 Canción individual</button>
           <button type="button" class="mode-btn" data-mode="album">💿 Álbum completo</button>
+          <button type="button" class="mode-btn" data-mode="youtube">📺 YouTube</button>
         </div>
       </div>
 
@@ -176,6 +177,59 @@
         <button type="button" id="albumSubmitBtn" class="album-submit-btn">
           Subir álbum completo
         </button>
+      </div>
+
+      <!-- ═══ MODO 3: YOUTUBE ═══ -->
+      <div id="youtubeModeWrap" class="hidden">
+
+        <div class="form-group">
+          <label for="youtubeUrl">1. Link del video de YouTube</label>
+          <input type="url" id="youtubeUrl"
+                 placeholder="https://www.youtube.com/watch?v=...">
+          <p class="hint">
+            Pega el enlace del video. Se obtendrán automáticamente la portada,
+            el título y el artista si están disponibles.
+          </p>
+        </div>
+
+        <div id="youtubeLoader" class="yt-loader hidden">
+          <span class="loader loader-dark"></span>
+          Obteniendo información del video...
+        </div>
+
+        <div id="youtubeFields" class="hidden">
+
+          <div class="form-group">
+            <label for="ytArtista">2. Nombre del artista</label>
+            <input type="text" id="ytArtista" placeholder="Ej: Artista">
+          </div>
+
+          <div class="form-group">
+            <label for="ytTitulo">3. Título de la canción</label>
+            <input type="text" id="ytTitulo" placeholder="Ej: Nombre de la canción">
+          </div>
+
+          <div class="form-group">
+            <label for="ytAlbum">4. Nombre del álbum</label>
+            <input type="text" id="ytAlbum" placeholder="Ej: Nombre del álbum">
+          </div>
+
+          <div class="form-group">
+            <label for="ytGenero">5. Género musical</label>
+            <input type="text" id="ytGenero" placeholder="Ej: Reggaetón">
+            <p class="hint">YouTube no siempre expone el género; edítalo si lo conoces.</p>
+          </div>
+
+          <div id="youtubePreview" class="preview show">
+            <img id="youtubePreviewImg" src="" alt="">
+            <div class="preview-info">
+              <strong id="youtubePreviewTitulo">—</strong>
+              <small id="youtubePreviewArtista">—</small>
+            </div>
+          </div>
+
+          <button type="button" id="youtubeSubmitBtn">Subir canción</button>
+        </div>
       </div>
 
     </form>
