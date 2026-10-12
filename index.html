@@ -483,6 +483,93 @@
     </div>
   </div>
 
+  <!-- ═══════════ MODAL: VENDER BEATS (solo plan $450) ═══════════ -->
+<div id="modal-beats" class="pago-overlay hidden">
+  <button class="pago-x" data-close="modal-beats">✕</button>
+  <div class="pago-wrap">
+    <h1 class="pago-title">🎧 Vender Beats</h1>
+
+    <div class="pago-info">
+      <p>Publica tus beats y define tus propios precios. Los compradores podrán contactarte directamente mediante los enlaces que configures para cada licencia.</p>
+      <p class="pago-warn"><strong>Importante:</strong> Función exclusiva del <strong>Plan $450 MXN</strong>. La portada debe ser de <strong>3000 × 3000 píxeles</strong>.</p>
+    </div>
+
+    <form id="formBeat" class="pago-form">
+      <h2>📝 Datos del Beat</h2>
+
+      <label>Título del Beat
+        <input type="text" name="beatTitulo" required placeholder="Ej: Midnight Trap">
+      </label>
+
+      <label>Género o estilo musical
+        <input type="text" name="beatGenero" required placeholder="Ej: Trap, Reggaetón, Hip-Hop...">
+      </label>
+
+      <label>🔊 Link de audio (Dropbox)
+        <input type="url" name="beatAudio" required
+               placeholder="https://www.dropbox.com/s/.../beat.mp3?dl=0">
+      </label>
+
+      <label>🖼️ Link de portada (Dropbox · 3000×3000 px)
+        <input type="url" name="beatPortada" required
+               placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
+      </label>
+
+      <h2 style="margin-top:24px;">💰 Licencias y contacto</h2>
+
+      <!-- LICENCIA MP3 -->
+      <div class="beat-licencia">
+        <div class="beat-licencia-title">🎵 Licencia MP3</div>
+        <label>Precio (MXN)
+          <input type="number" name="precioMP3" step="0.01" min="0" required placeholder="150.00">
+        </label>
+        <label>Enlace de contacto
+          <input type="url" name="contactoMP3" required
+                 placeholder="https://wa.me/52... o https://instagram.com/...">
+        </label>
+      </div>
+
+      <!-- LICENCIA WAV -->
+      <div class="beat-licencia">
+        <div class="beat-licencia-title">🎼 Licencia WAV</div>
+        <label>Precio (MXN)
+          <input type="number" name="precioWAV" step="0.01" min="0" required placeholder="300.00">
+        </label>
+        <label>Enlace de contacto
+          <input type="url" name="contactoWAV" required
+                 placeholder="https://wa.me/52... o https://instagram.com/...">
+        </label>
+      </div>
+
+      <!-- LICENCIA EXCLUSIVA -->
+      <div class="beat-licencia">
+        <div class="beat-licencia-title">👑 Licencia Exclusiva</div>
+        <label>Precio (MXN)
+          <input type="number" name="precioExclusiva" step="0.01" min="0" required placeholder="1500.00">
+        </label>
+        <label>Enlace de contacto
+          <input type="url" name="contactoExclusiva" required
+                 placeholder="https://wa.me/52... o https://instagram.com/...">
+        </label>
+      </div>
+
+      <button type="submit" id="beatSubmitBtn" class="pago-submit" style="margin-top:20px;">
+        SUBIR BEAT
+      </button>
+      <p id="beatMsg" class="pago-msg"></p>
+    </form>
+
+    <section id="beatsSection" class="beats-section">
+      <div class="beats-header">
+        <h2 style="font-size:18px;font-weight:800;color:#fff;">🎧 Beats publicados</h2>
+        <span id="beatsCount" class="beats-badge">0</span>
+      </div>
+      <div id="beatsList" class="beats-list"></div>
+      <p id="beatsEmpty" class="beats-empty">Todavía no hay beats publicados.</p>
+    </section>
+  </div>
+</div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script type="module" src="script.js"></script>
 </body>
