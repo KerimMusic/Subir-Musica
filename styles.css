@@ -521,6 +521,7 @@ button:disabled { opacity: .4; cursor: not-allowed; }
   opacity: .5;
   cursor: not-allowed;
 }
+
 /* ═══════════ VENDER BEATS ═══════════ */
 .beat-licencia {
   background: #0a0a14;
