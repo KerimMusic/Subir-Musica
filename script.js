@@ -1954,3 +1954,206 @@ albumSubmitBtn?.addEventListener('click', subirAlbum);
 
 /* Estado inicial: 1 canción de ejemplo */
 renderAlbumSongs(1);
+/* ═══════════════════════════════════════════════════════════════
+   🎧 VENDER BEATS — Solo plan $450 (omega450)
+   ═══════════════════════════════════════════════════════════════ */
+
+const beatsBtn      = document.getElementById('beatsBtn');
+const formBeat      = document.getElementById('formBeat');
+const beatSubmitBtn = document.getElementById('beatSubmitBtn');
+const beatMsg       = document.getElementById('beatMsg');
+const beatsSection  = document.getElementById('beatsSection');
+const beatsList     = document.getElementById('beatsList');
+const beatsCount    = document.getElementById('beatsCount');
+const beatsEmpty    = document.getElementById('beatsEmpty');
+
+let unsubscribeBeats = null;
+
+/* ¿El usuario tiene el plan de $450 vigente? */
+function tienePlan450() {
+  if (!usuarioActual || !suscripcionActual) return false;
+  const est = String(suscripcionActual.estado || '').toLowerCase();
+  if (est !== 'aprobado' && est !== 'activa') return false;
+  if (String(suscripcionActual.plan || '').toLowerCase() !== 'omega450') return false;
+  const venc = tsToDate(suscripcionActual.fechaVencimiento);
+  return !venc || new Date() < venc;
+}
+window.tienePlan450 = tienePlan450;
+
+/* Mostrar / ocultar el botón según el plan */
+function actualizarBotonBeats() {
+  if (!beatsBtn) return;
+  if (tienePlan450()) beatsBtn.classList.remove('hidden');
+  else beatsBtn.classList.add('hidden');
+}
+
+/* Escuchar cambios en la colección "beats" */
+function escucharBeats() {
+  if (unsubscribeBeats) unsubscribeBeats();
+  const ref = collection(db, 'beats');
+  unsubscribeBeats = onSnapshot(ref, (snap) => {
+    const beats = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    beats.sort((a, b) => (b.fecha?.seconds || 0) - (a.fecha?.seconds || 0));
+    renderBeats(beats);
+  }, (err) => console.error('Error beats:', err));
+}
+
+/* Renderizar beats publicados */
+function renderBeats(beats) {
+  if (!beatsList) return;
+  beatsCount.textContent = beats.length;
+  if (!beats.length) {
+    beatsList.innerHTML = '';
+    beatsEmpty.classList.remove('hidden');
+    return;
+  }
+  beatsEmpty.classList.add('hidden');
+  beatsList.innerHTML = beats.map(b => {
+    const img = b.portadaUrl ? escapeHtml(b.portadaUrl) : PLACEHOLDER;
+    const titulo  = escapeHtml(b.titulo  || 'Sin título');
+    const genero  = escapeHtml(b.genero  || '—');
+    const lic = b.licencias || {};
+    const btn = (nombre, key) => {
+      const l = lic[key];
+      if (!l || !l.precio || !l.contacto) return '';
+      return `<a class="beat-lic-btn" href="${escapeHtml(l.contacto)}"
+                 target="_blank" rel="noopener">
+        <span class="lic-nombre">${nombre}</span>
+        <span class="lic-precio">$${Number(l.precio).toLocaleString('es-MX')}</span>
+      </a>`;
+    };
+    return `
+      <div class="beat-item">
+        <img src="${img}" alt="" loading="lazy"
+             onerror="this.onerror=null;this.src='${PLACEHOLDER}'">
+        <div class="beat-item-info">
+          <span class="beat-item-title" title="${titulo}">${titulo}</span>
+          <span class="beat-item-genero">${genero}</span>
+        </div>
+        <div class="beat-licencias">
+          ${btn('MP3', 'mp3')}
+          ${btn('WAV', 'wav')}
+          ${btn('Exclusiva', 'exclusiva')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* Abrir modal de Vender Beats */
+function abrirModalBeats() {
+  if (!usuarioActual) { alert('Inicia sesión con Google primero.'); return; }
+  if (!tienePlan450()) {
+    alert('Esta función es exclusiva del Plan $450 MXN.\nActiva tu plan para vender beats.');
+    abrirModalSusc('modal-susc');
+    return;
+  }
+  abrirModalSusc('modal-beats');
+  escucharBeats();
+}
+
+beatsBtn?.addEventListener('click', () => {
+  cerrarMenu();
+  setTimeout(abrirModalBeats, 120);
+});
+
+/* Envío del formulario */
+formBeat?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  if (!usuarioActual) {
+    beatMsg.className = 'pago-msg error';
+    beatMsg.textContent = 'Inicia sesión primero.';
+    return;
+  }
+  if (!tienePlan450()) {
+    beatMsg.className = 'pago-msg error';
+    beatMsg.textContent = 'Necesitas el Plan $450 MXN activo.';
+    return;
+  }
+
+  const fd = new FormData(formBeat);
+  const titulo   = (fd.get('beatTitulo')   || '').trim();
+  const genero   = (fd.get('beatGenero')   || '').trim();
+  const audioRaw = (fd.get('beatAudio')    || '').trim();
+  const portRaw  = (fd.get('beatPortada')  || '').trim();
+
+  const licencias = {
+    mp3:       { precio: parseFloat(fd.get('precioMP3'))       || 0,
+                 contacto: (fd.get('contactoMP3')       || '').trim() },
+    wav:       { precio: parseFloat(fd.get('precioWAV'))       || 0,
+                 contacto: (fd.get('contactoWAV')       || '').trim() },
+    exclusiva: { precio: parseFloat(fd.get('precioExclusiva')) || 0,
+                 contacto: (fd.get('contactoExclusiva') || '').trim() }
+  };
+
+  if (!titulo || !genero || !audioRaw || !portRaw) {
+    beatMsg.className = 'pago-msg error';
+    beatMsg.textContent = 'Completa título, género, audio y portada.';
+    return;
+  }
+  for (const k of ['mp3', 'wav', 'exclusiva']) {
+    if (!licencias[k].precio || !licencias[k].contacto) {
+      beatMsg.className = 'pago-msg error';
+      beatMsg.textContent = `Completa precio y contacto de la licencia ${k.toUpperCase()}.`;
+      return;
+    }
+  }
+
+  beatSubmitBtn.disabled = true;
+  beatSubmitBtn.textContent = 'SUBIENDO...';
+  beatMsg.className = 'pago-msg';
+  beatMsg.textContent = 'Guardando beat...';
+
+  try {
+    await addDoc(collection(db, 'beats'), {
+      titulo,
+      genero,
+      audioUrl:   dropboxDirecto(audioRaw),
+      portadaUrl: dropboxDirecto(portRaw),
+      licencias,
+      uid:   usuarioActual.uid,
+      email: usuarioActual.email || '',
+      nombre: usuarioActual.displayName || '',
+      fecha: serverTimestamp()
+    });
+
+    beatMsg.className = 'pago-msg ok';
+    beatMsg.textContent = '✅ Beat publicado correctamente.';
+    formBeat.reset();
+  } catch (err) {
+    console.error('Error al subir beat:', err);
+    beatMsg.className = 'pago-msg error';
+    beatMsg.textContent = 'Error: ' + err.message;
+  } finally {
+    beatSubmitBtn.disabled = false;
+    beatSubmitBtn.textContent = 'SUBIR BEAT';
+  }
+});
+
+/* ── Enganchar con el ciclo de autenticación ── */
+
+/* 1) Cuando el usuario inicia sesión, ocultar/mostrar según plan */
+const _origOnAuthBeats = true; // marcador visual
+
+/* 2) Actualizar botón cada vez que cambie la suscripción */
+const _origActualizarAcceso = window.actualizarAccesoSubida;
+window.actualizarAccesoSubida = function () {
+  _origActualizarAcceso?.();
+  actualizarBotonBeats();
+};
+
+/* 3) En logout, limpiar beats y ocultar botón */
+logoutBtn?.addEventListener('click', () => {
+  if (unsubscribeBeats) { unsubscribeBeats(); unsubscribeBeats = null; }
+  beatsBtn?.classList.add('hidden');
+  if (beatsList) beatsList.innerHTML = '';
+  if (beatsCount) beatsCount.textContent = '0';
+  if (beatsEmpty) beatsEmpty.classList.remove('hidden');
+});
+
+/* 4) Estado inicial al cargar */
+document.addEventListener('DOMContentLoaded', () => {
+  actualizarBotonBeats();
+});
+actualizarBotonBeats();
