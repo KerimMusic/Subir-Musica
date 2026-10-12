@@ -1,565 +1,658 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subir Canción - Kerim Music</title>
-
-  <link rel="icon" type="image/jpeg"
-        href="https://dl.dropboxusercontent.com/scl/fi/n3gnwqcivmyney29sj7fj/1790930772635.jpg?rlkey=5vlev78f26q3vcvw9w38sdtcz&st=sqt18jy2">
-  <link rel="apple-touch-icon"
-        href="https://dl.dropboxusercontent.com/scl/fi/n3gnwqcivmyney29sj7fj/1790930772635.jpg?rlkey=5vlev78f26q3vcvw9w38sdtcz&st=sqt18jy2">
-
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Reproductor de Música Kerim Music</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div id="menuWrap" class="menu-wrap hidden">
-    <button id="menuBtn" class="menu-btn" type="button" aria-label="Abrir menú" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-    <div id="menuDropdown" class="menu-dropdown hidden">
-      <button id="statsBtn" class="menu-item" type="button">📚 Mis canciones subidas</button>
-      <button id="beatsBtn" class="menu-item hidden" type="button">🎧 Vender Beats</button>
-      <button id="suscBtn" class="menu-item" type="button">💳 Suscripción</button>
-      <button id="tutorialBtn" class="menu-item" type="button">🎵 Cómo subir mi canción</button>
-      <button id="logoutBtn" class="menu-item" type="button">🚪 Cerrar sesión</button>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="header">
-      <h1>🎵 Sube tu Musica</h1>
-      <p>Comparte tu musica al mundo</p>
-    </div>
-
-    <div id="userBox" class="user-box hidden">
-      <span class="dot"></span>
-      <span id="userEmail">Cargando...</span>
-    </div>
-
-    <button id="loginBtn" class="btn-google">
-      <svg width="18" height="18" viewBox="0 0 24 24">
-        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-      </svg>
-      Iniciar sesión con Google
-    </button>
-
-    <div id="formLocked" class="form-locked hidden">
-      <div class="lock-icon">🔒</div>
-      <h3>Necesitas una suscripción activa para subir música.</h3>
-      <p id="lockMessage">Activa tu suscripción para comenzar a subir tu música.</p>
-      <button id="verSuscBtn" class="susc-btn-inline" type="button">Ver suscripciones</button>
-    </div>
-
-    <form id="formCancion" class="hidden">
-
-      <div class="form-group">
-        <label>Tipo de subida</label>
-        <div class="upload-mode" id="uploadMode">
-          <button type="button" class="mode-btn active" data-mode="single">🎵 Canción individual</button>
-          <button type="button" class="mode-btn" data-mode="album">💿 Álbum completo</button>
-        </div>
-      </div>
-
-      <div id="singleModeWrap">
-        <div class="form-group">
-          <label for="artista">1. Nombre del artista</label>
-          <input type="text" id="artista" placeholder="Ej: Artista" required>
-        </div>
-        <div class="form-group">
-          <label for="titulo">2. Título de la canción</label>
-          <input type="text" id="titulo" placeholder="Ej: Nombre de la cancion" required>
-        </div>
-        <div class="form-group">
-          <label for="album">3. Nombre del álbum</label>
-          <input type="text" id="album" placeholder="Ej: Nombre del Album">
-        </div>
-        <div class="form-group">
-          <label for="collaboratorsContainer">3b. Colaboradores</label>
-          <div class="collaborators" id="collaboratorsContainer"></div>
-          <button type="button" id="addCollaboratorBtn" class="btn-add-collab">
-            <span class="plus-icon">+</span> Agregar colaborador
-          </button>
-          <p class="hint">Opcional. Agrega uno o más colaboradores de la canción.</p>
-        </div>
-        <div class="form-group">
-          <label for="genreToggle">4. Género musical</label>
-          <div class="genre-select" id="genreSelect">
-            <button type="button" id="genreToggle" class="genre-toggle"
-                    aria-haspopup="listbox" aria-expanded="false" aria-controls="genrePanel">
-              <span id="genreValue" class="genre-value placeholder">Selecciona un género</span>
-              <span class="genre-arrow" aria-hidden="true">▾</span>
+    <div class="auth-gate" id="auth-gate" aria-hidden="false">
+        <div class="auth-gate-inner">
+            <img class="auth-gate-logo"
+                 src="https://cdn.pixabay.com/animation/2023/02/21/12/15/12-15-04-910_512.gif"
+                 alt="Kerim Music">
+            <h1 class="auth-gate-title">OmegaBeats</h1>
+            <p class="auth-gate-sub">Inicia sesión con tu cuenta de Google para continuar</p>
+            <button class="auth-google-btn" id="auth-google-btn" type="button">
+                <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                <span>Continuar con Google</span>
             </button>
-            <div id="genrePanel" class="genre-panel hidden">
-              <div class="genre-search-wrap">
-                <input type="text" id="genreSearch" class="genre-search"
-                       placeholder="🔍 Buscar género..." autocomplete="off">
-              </div>
-              <div id="genreList" class="genre-list" role="listbox"></div>
-              <p id="genreEmpty" class="genre-empty hidden">No se encontraron géneros</p>
-            </div>
-          </div>
-          <input type="hidden" id="genero" name="genero" value="">
-          <p class="hint">Opcional. Abre la lista y usa el buscador.</p>
+            <p class="auth-gate-error" id="auth-gate-error"></p>
+            <p class="auth-gate-note">Debes iniciar sesión para usar la app</p>
         </div>
-        <div class="form-group hidden" id="subgenreGroup">
-          <label for="subgenreToggle">4b. Subgénero (Regional Mexicano)</label>
-          <div class="genre-select" id="subgenreSelect">
-            <button type="button" id="subgenreToggle" class="genre-toggle"
-                    aria-haspopup="listbox" aria-expanded="false" aria-controls="subgenrePanel">
-              <span id="subgenreValue" class="genre-value placeholder">Selecciona un subgénero</span>
-              <span class="genre-arrow" aria-hidden="true">▾</span>
+    </div>
+
+    <div class="app-container">
+
+        <header class="top-bar">
+            <button class="menu-btn" id="menu-btn" aria-label="Abrir menú">
+                <svg viewBox="0 0 24 24" width="28" height="28">
+                    <line x1="3" y1="6"  x2="21" y2="6"  stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="3" y1="12" x2="21" y2="12" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="3" y1="18" x2="21" y2="18" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
             </button>
-            <div id="subgenrePanel" class="genre-panel hidden">
-              <div class="genre-search-wrap">
-                <input type="text" id="subgenreSearch" class="genre-search"
-                       placeholder="🔍 Buscar subgénero..." autocomplete="off">
-              </div>
-              <div id="subgenreList" class="genre-list" role="listbox"></div>
-              <p id="subgenreEmpty" class="genre-empty hidden">No se encontraron subgéneros</p>
+
+            <div class="header-logo">
+                <img src="https://cdn.pixabay.com/animation/2023/02/21/12/15/12-15-04-910_512.gif"
+                     alt="kerimmusic" loading="lazy">
             </div>
-          </div>
-          <input type="hidden" id="subgenero" name="subgenero" value="">
-          <p class="hint">Elige el subgénero específico.</p>
-        </div>
-        <div class="form-group">
-          <label for="audio">5. Link de audio (Dropbox)</label>
-          <input type="url" id="audio" placeholder="https://www.dropbox.com/s/.../cancion.mp3?dl=0" required>
-          <p class="hint">Pega el link normal de Dropbox. Se convertirá automáticamente.</p>
-        </div>
-        <div class="form-group">
-          <label for="imagen">6. Link de imagen (Dropbox)</label>
-          <input type="url" id="imagen" placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
-          <p class="hint">Opcional. Si lo dejas vacío se mostrará una imagen por defecto.</p>
-        </div>
-        <div id="preview" class="preview">
-          <img id="previewImg" src="" alt="">
-          <div class="preview-info">
-            <strong id="previewTitulo">—</strong>
-            <small id="previewArtista">—</small>
-            <span class="Album">Reggeton 1</span>
-          </div>
-        </div>
-        <button type="submit" id="submitBtn">Subir canción</button>
-      </div>
 
-      <div id="albumModeWrap" class="hidden">
+            <div class="header-actions">
+                <button class="heart-search-btn" id="heart-search-btn" aria-label="Buscar Beat">
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="#ff2a2a">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
 
-        <div class="form-group">
-          <label for="albumNombre">1. Nombre del álbum</label>
-          <input type="text" id="albumNombre" placeholder="Ej: Mi Álbum">
-          <p class="hint">Se aplicará automáticamente a todas las canciones.</p>
-        </div>
-
-        <div class="form-group">
-          <label for="albumCantidad">2. ¿Cuántas canciones vas a subir?</label>
-          <input type="number" id="albumCantidad" min="1" max="50" value="1" step="1">
-          <p class="hint">Máximo 50 canciones por álbum.</p>
-        </div>
-
-        <div class="form-group">
-          <label for="albumImagen">3. Portada del álbum (Dropbox)</label>
-          <input type="url" id="albumImagen"
-                 placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
-          <p class="hint">Una sola portada para todas las canciones del álbum.</p>
-        </div>
-
-        <div id="albumSongsContainer" class="album-songs"></div>
-
-        <button type="button" id="albumSubmitBtn" class="album-submit-btn">
-          Subir álbum completo
-        </button>
-      </div>
-
-    </form>
-
-    <div id="status" class="status"></div>
-
-    <section id="historySection" class="history hidden">
-      <div class="history-header">
-        <h2>📚 Mis canciones subidas</h2>
-        <span id="historyCount" class="badge">0</span>
-      </div>
-      <div id="historyList" class="history-list"></div>
-      <p id="historyEmpty" class="history-empty hidden">Todavía no has subido ninguna canción.</p>
-    </section>
-
-    <div id="playerModal" class="player-modal hidden" aria-hidden="true">
-      <div class="player-backdrop" data-close="1"></div>
-      <div class="player-card" role="dialog" aria-modal="true">
-        <button type="button" class="player-close" data-close="1" title="Cerrar">✕</button>
-        <div class="player-cover"><img id="playerImg" src="" alt=""></div>
-        <div class="player-meta">
-          <strong id="playerTitle">—</strong>
-          <small id="playerArtist">—</small>
-        </div>
-        <div class="player-progress">
-          <span id="playerCurrent">0:00</span>
-          <input type="range" id="playerSeek" min="0" max="1000" value="0" step="1">
-          <span id="playerDuration">0:00</span>
-        </div>
-        <div class="player-controls">
-          <button type="button" id="playerRewind" class="player-btn">⏪</button>
-          <button type="button" id="playerPlay" class="player-btn player-btn-main">▶</button>
-          <button type="button" id="playerForward" class="player-btn">⏩</button>
-        </div>
-        <div class="player-volume">
-          <span>🔊</span>
-          <input type="range" id="playerVol" min="0" max="1" step="0.01" value="1">
-        </div>
-        <p class="player-hint">Vista previa — así se verá y sonará en el reproductor.</p>
-      </div>
-    </div>
-
-    <div id="editModal" class="edit-modal hidden" aria-hidden="true">
-      <div class="edit-backdrop" data-close="1"></div>
-      <div class="edit-card" role="dialog" aria-modal="true">
-        <button type="button" class="edit-close" data-close="1" title="Cerrar">✕</button>
-        <div class="edit-cover"><img id="editImg" src="" alt=""></div>
-        <div class="edit-content">
-          <h2 class="edit-heading">EDITAR TU MUSICA</h2>
-          <form id="editForm" class="edit-form">
-            <div class="form-group">
-              <label for="editArtista">1. NOMBRE DEL ARTISTA</label>
-              <input type="text" id="editArtista" required>
+                <button class="share-btn" id="share-btn" aria-label="Compartir">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5"  r="3" fill="#ffffff" stroke="none"/>
+                        <circle cx="6"  cy="12" r="3" fill="#ffffff" stroke="none"/>
+                        <circle cx="18" cy="19" r="3" fill="#ffffff" stroke="none"/>
+                        <line x1="8.59"  y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51"  x2="8.59"  y2="10.49"/>
+                    </svg>
+                </button>
             </div>
-            <div class="form-group">
-              <label for="editTitulo">2. TÍTULO DE LA CANCIÓN</label>
-              <input type="text" id="editTitulo" required>
+        </header>
+
+        <div class="submenu-overlay" id="submenu-overlay"></div>
+        <nav class="submenu" id="submenu" aria-hidden="true">
+            <div class="submenu-header">
+                <span class="submenu-title">MENÚ</span>
+                <button class="close-submenu" id="close-submenu" aria-label="Cerrar menú">&times;</button>
             </div>
-            <div class="form-group">
-              <label for="editAlbum">3. NOMBRE DEL ÁLBUM</label>
-              <input type="text" id="editAlbum">
+
+            <div class="submenu-user-section">
+                <span class="submenu-user-name" id="submenu-user-name">Cargando usuario...</span>
+                <span class="submenu-user-sub" id="submenu-user-sub">Perfil de usuario</span>
             </div>
-            <div class="form-group">
-              <label for="collaboratorsEditContainer">3b. COLABORADORES</label>
-              <div class="collaborators" id="collaboratorsEditContainer"></div>
-              <button type="button" id="addCollaboratorBtnEdit" class="btn-add-collab">
-                <span class="plus-icon">+</span> Agregar colaborador
-              </button>
+
+            <ul class="submenu-list">
+                <li><a href="#" id="mi-playlist-link" class="submenu-link" type="button">Mi Playlist</a></li>
+                <li><a href="#" id="stats-link" class="submenu-link" type="button">Estadísticas de horas</a></li>
+                <li><a href="#" id="mensajes-link" class="submenu-link" type="button">Mensajes <span class="msg-badge" id="msg-badge" style="display:none;">0</span></a></li>
+                <li><a href="#" id="edit-name-link" class="submenu-link" type="button">Editar nombre</a></li>
+                <li><a href="#" id="change-color-link" class="submenu-link" type="button">Cambiar color</a></li>
+                <li><a href="#" id="logout-link" class="submenu-link" type="button">Cerrar Sesion</a></li>
+            </ul>
+        </nav>
+
+        <div class="search-container" id="search-container">
+            <input type="text" class="search-input" id="search-input" placeholder="Buscar beat o artista...">
+        </div>
+
+        <div class="playlist" id="playlist">
+
+            <div class="home-view" id="home-view">
+
+                <section class="home-section" id="sec-artists">
+                    <h2 class="home-section-title">¿Qué artista quieres escuchar?</h2>
+                    <div class="home-carousel" id="carousel-artists"></div>
+                </section>
+
+                <section class="home-section" id="sec-listen-again">
+    <h2 class="home-section-title">🔁 Volver a Oír</h2>
+    <div class="home-carousel" id="carousel-listen-again"></div>
+               </section>
+
+                <section class="home-section" id="sec-maybe">
+                    <h2 class="home-section-title">A lo mejor te guste</h2>
+                    <div class="home-carousel" id="carousel-maybe"></div>
+                </section>
+
+                <section class="home-section" id="sec-top">
+                    <h2 class="home-section-title">Lo más escuchado</h2>
+                    <div class="home-carousel" id="carousel-top"></div>
+                </section>
+
+                <section class="home-section" id="sec-albums">
+                    <h2 class="home-section-title">Álbunes de artistas</h2>
+                    <div class="home-carousel" id="carousel-albums"></div>
+                </section>
+
+                <section class="home-section" id="sec-shared" style="display:none;">
+                    <h2 class="home-section-title">Playlists compartidas contigo</h2>
+                    <div class="home-carousel" id="carousel-shared"></div>
+                </section>
+
+                <div class="home-all-header">
+                    <h2 class="home-section-title home-section-title--all">Todas las canciones</h2>
+                    <button class="show-all-btn" id="show-all-btn" type="button">
+                        Mostrar todas las canciones
+                    </button>
+                </div>
             </div>
-            <div class="form-group">
-              <label for="editAudio">4. LINK DE AUDIO (DROPBOX)</label>
-              <input type="url" id="editAudio" required>
+        </div>
+
+        <div class="player" id="player">
+
+            <div class="player-thumbnail" id="player-thumbnail">
+                <img id="player-cover" alt="Portada">
             </div>
-            <div class="form-group">
-              <label for="editImagen">5. LINK DE IMAGEN (DROPBOX)</label>
-              <input type="url" id="editImagen">
+
+            <div class="player-center">
+                <div class="player-title" id="player-title">Titulo del Beats</div>
+                <div class="progress-bar" id="progress-bar" role="slider"
+                     aria-label="Progreso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-thumb" id="progress-thumb"></div>
+                </div>
+                <div class="time-labels">
+                    <span id="current-time">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
             </div>
-            <button type="submit" id="editSubmitBtn" class="btn-edit-submit">TEREMINAR</button>
-          </form>
+
+            <button class="play-button" id="play-button" type="button" aria-label="Reproducir">
+                <svg id="play-icon" viewBox="0 0 24 24" width="22" height="22">
+                    <polygon points="5,3 19,12 5,21" fill="#ffffff" />
+                </svg>
+            </button>
         </div>
-      </div>
+
+        <div class="artist-profile" id="artist-profile" aria-hidden="true">
+            <div class="ap-header">
+                <span class="ap-header-title">PERFIL DE ARTISTA</span>
+                <button class="ap-close" id="ap-close" type="button" aria-label="Cerrar perfil">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round">
+                        <line x1="6" y1="6"  x2="18" y2="18"/>
+                        <line x1="18" y1="6" x2="6"  y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="ap-scroll" id="ap-scroll">
+                <div class="ap-hero" id="ap-hero">
+                    <img class="ap-hero-img" id="ap-hero-img" alt="Portada del artista" loading="lazy">
+                    <div class="ap-hero-shade"></div>
+                    <h1 class="ap-artist-name" id="ap-artist-name">Artista</h1>
+                </div>
+
+                <div class="ap-stats">
+                    <div class="ap-total">
+                        <span class="ap-total-label">Total de Reproducciones:</span>
+                        <span class="ap-total-value" id="ap-total-plays">0</span>
+                    </div>
+                    <button class="ap-listen-btn" id="ap-listen-btn" type="button">Escuchar mi música</button>
+                </div>
+
+                <div class="ap-grid" id="ap-grid"></div>
+            </div>
+        </div>
+
+        <div class="album-view" id="album-view" aria-hidden="true">
+
+            <div class="av-header">
+                <button class="av-back" id="av-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+
+                <h1 class="av-title" id="av-title">Álbum</h1>
+
+                <button class="av-toggle" id="av-toggle" type="button">Modo de lista</button>
+            </div>
+
+            <div class="av-scroll" id="av-scroll">
+                <div class="av-carousel" id="av-carousel"></div>
+                <div class="av-list" id="av-list"></div>
+            </div>
+
+            <div class="av-footer">
+                <button class="av-play-all" id="av-play-all" type="button">
+                    Escuchar todo el álbum
+                </button>
+            </div>
+        </div>
+
+        <div class="playlist-view" id="playlist-view" aria-hidden="true">
+            <div class="pv-header">
+                <button class="pv-back" id="pv-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="pv-title" id="pv-title">Tu Playlist</h1>
+
+                <button class="pv-edit" id="pv-edit" type="button" aria-label="Editar playlist" style="display:none;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                         stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                    <span>Editar<br>playlist</span>
+                </button>
+
+                <button class="pv-share" id="pv-share" type="button" aria-label="Compartir playlist">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                         stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5"  r="3" fill="#ffffff" stroke="none"/>
+                        <circle cx="6"  cy="12" r="3" fill="#ffffff" stroke="none"/>
+                        <circle cx="18" cy="19" r="3" fill="#ffffff" stroke="none"/>
+                        <line x1="8.59"  y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51"  x2="8.59"  y2="10.49"/>
+                    </svg>
+                    <span>Compartir<br>playlist</span>
+                </button>
+            </div>
+
+            <div class="pv-scroll" id="pv-scroll">
+                <div class="pv-cover-wrap">
+                    <img class="pv-cover" id="pv-cover-img" alt="Portada de la playlist" loading="lazy">
+                    <span class="pv-count" id="pv-count">0 canciones</span>
+                </div>
+                <div class="pv-list" id="pv-list"></div>
+            </div>
+
+            <div class="pv-footer">
+                <button class="pv-cancel" id="pv-cancel" type="button" style="display:none;">
+                    Cancelar
+                </button>
+                <button class="pv-play-all" id="pv-play-all" type="button">
+                    Escuchar esta playlist
+                </button>
+                <button class="pv-save" id="pv-save" type="button" style="display:none;">
+                    Guardar cambios
+                </button>
+            </div>
+        </div>
+
+        <div class="mi-playlist-view" id="mi-playlist-view" aria-hidden="true">
+            <div class="mp-header">
+                <button class="mp-back" id="mp-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="mp-title">Mi Playlist</h1>
+                <button class="mp-create" id="mp-create" type="button">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none"
+                         stroke="#ffffff" stroke-width="2.6" stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span>Crear +</span>
+                </button>
+            </div>
+            <div class="mp-scroll" id="mp-scroll">
+                <div class="mp-grid" id="mp-grid"></div>
+                <div class="mp-empty" id="mp-empty" style="display:none;">
+                    <div class="mp-empty-title">Aún no tienes playlists</div>
+                    <div class="mp-empty-sub">Toca "Crear +" para crear tu primera playlist</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mensajes-view" id="mensajes-view" aria-hidden="true">
+            <div class="msg-header">
+                <button class="msg-back" id="msg-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="msg-title">Mensajes</h1>
+                <button class="msg-new-btn" id="msg-new-btn" type="button" aria-label="Nuevo mensaje">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <path d="M12 20h9"/>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="msg-scroll" id="msg-scroll">
+                <div class="msg-list" id="msg-list"></div>
+                <div class="msg-empty" id="msg-empty" style="display:none;">
+                    <div class="msg-empty-title">Sin mensajes</div>
+                    <div class="msg-empty-sub">Inicia una conversación tocando el botón de arriba</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-view" id="chat-view" aria-hidden="true">
+            <div class="chat-header">
+                <button class="chat-back" id="chat-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <div class="chat-user-info">
+                    <div class="chat-avatar" id="chat-avatar"></div>
+                    <span class="chat-username" id="chat-username">Usuario</span>
+                </div>
+            </div>
+            <div class="chat-scroll" id="chat-scroll">
+                <div class="chat-messages" id="chat-messages"></div>
+            </div>
+            <div class="chat-composer">
+                <div class="chat-attachment" id="chat-attachment" style="display:none;"></div>
+                <div class="chat-composer-row">
+                    <input type="text" class="chat-input" id="chat-input"
+                           placeholder="Escribe un mensaje..." autocomplete="off">
+                    <button class="chat-send" id="chat-send" type="button" aria-label="Enviar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2" fill="#ffffff" stroke="none"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="newmsg-view" id="newmsg-view" aria-hidden="true">
+            <div class="newmsg-header">
+                <button class="newmsg-back" id="newmsg-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="newmsg-title">Nuevo mensaje</h1>
+            </div>
+            <div class="newmsg-search-wrap">
+                <input type="text" class="newmsg-input" id="newmsg-input"
+                       placeholder="Buscar por nombre o correo..." autocomplete="off">
+            </div>
+            <div class="newmsg-scroll" id="newmsg-scroll">
+                <div class="newmsg-list" id="newmsg-list"></div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             VISTA: ESTADÍSTICAS DE HORAS ESCUCHANDO MÚSICA
+             ========================================================= -->
+        <div class="stats-view" id="stats-view" aria-hidden="true">
+            <div class="st-header">
+                <button class="st-back" id="st-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="st-title">Estadísticas de horas escuchando música</h1>
+            </div>
+
+            <div class="st-scroll" id="st-scroll">
+                <div class="st-hero">
+                    <div class="st-hero-label">🎧 Tiempo escuchando música</div>
+                    <div class="st-hero-month" id="st-hero-month">Este mes</div>
+                    <div class="st-hero-time" id="st-hero-time">0 h 0 min</div>
+                </div>
+
+                <div class="st-history-header">HISTORIAL</div>
+                <div class="st-list" id="st-list"></div>
+                <div class="st-empty" id="st-empty" style="display:none;">
+                    <div class="st-empty-title">Aún no hay estadísticas</div>
+                    <div class="st-empty-sub">Empieza a escuchar música para ver tu tiempo aquí</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             VISTA: COMUNIDAD OMEGA
+             ========================================================= -->
+        <div class="comunidad-view" id="comunidad-view" aria-hidden="true">
+            <div class="cm-header">
+                <button class="cm-back" id="cm-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="cm-title">Comunidad Omega</h1>
+                <button class="cm-publish-btn" id="cm-publish-btn" type="button">
+                    Publica Algo
+                </button>
+            </div>
+
+            <div class="cm-scroll" id="cm-scroll">
+                <div class="cm-list" id="cm-list"></div>
+                <div class="cm-empty" id="cm-empty" style="display:none;">
+                    <div class="cm-empty-title">Aún no hay publicaciones</div>
+                    <div class="cm-empty-sub">Sé el primero en publicar algo en la Comunidad Omega</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             VISTA: CREAR PUBLICACIÓN
+             ========================================================= -->
+        <div class="comunidad-crear-view" id="comunidad-crear-view" aria-hidden="true">
+            <div class="cm-header">
+                <button class="cm-back" id="cmc-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="cm-title" id="cmc-title">Publicar algo</h1>
+                <span style="width:36px;"></span>
+            </div>
+
+            <div class="cm-scroll" id="cmc-scroll">
+                <div class="cmc-textarea-wrap">
+                    <textarea class="cmc-textarea" id="cmc-textarea"
+                              placeholder="¿Qué estás pensando?" rows="6"></textarea>
+                </div>
+
+                <div class="cmc-song-picker">
+                    <label class="cmc-label">🎵 Añadir una canción (opcional)</label>
+                    <input type="text" class="cmc-search" id="cmc-search"
+                           placeholder="Buscar canción de OmegaBeats..." autocomplete="off">
+                    <div class="cmc-song-results" id="cmc-song-results" style="display:none;"></div>
+                    <div class="cmc-song-selected" id="cmc-song-selected" style="display:none;"></div>
+                </div>
+
+                <p class="cmc-status" id="cmc-status"></p>
+            </div>
+
+            <div class="cmc-footer">
+                <button class="cmc-publish" id="cmc-publish" type="button">Publicar</button>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             VISTA: COMENTARIOS DE UNA PUBLICACIÓN
+             ========================================================= -->
+        <div class="comentarios-view" id="comentarios-view" aria-hidden="true">
+            <div class="cm-header">
+                <button class="cm-back" id="com-back" type="button" aria-label="Volver">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                         stroke="#ffffff" stroke-width="2.4" stroke-linecap="round"
+                         stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                </button>
+                <h1 class="cm-title">Comentarios</h1>
+                <span style="width:36px;"></span>
+            </div>
+
+            <div class="com-scroll" id="com-scroll">
+                <div class="com-post-preview" id="com-post-preview"></div>
+                <div class="com-list" id="com-list"></div>
+                <div class="com-empty" id="com-empty" style="display:none;">
+                    <div class="cm-empty-title">Sin comentarios</div>
+                    <div class="cm-empty-sub">Sé el primero en comentar</div>
+                </div>
+            </div>
+
+            <div class="com-composer">
+                <input type="text" class="com-input" id="com-input"
+                       placeholder="Escribe un comentario..." autocomplete="off">
+                <button class="com-send" id="com-send" type="button" aria-label="Enviar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" fill="#ffffff" stroke="none"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== BOTTOM NAVIGATION BAR ==================== -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <button class="bn-item" id="bn-mensajes" type="button">
+                <div class="bn-icon">
+                    <svg viewBox="0 0 24 24" fill="#ff2a2a"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                </div>
+                <span class="bn-label">Mensajes</span>
+            </button>
+            <button class="bn-item" id="bn-beatsmusic" type="button">
+                <div class="bn-icon">
+                    <svg viewBox="0 0 24 24" fill="#ffffff">
+                        <text x="12" y="17" text-anchor="middle" font-family="'Brush Script MT', 'Dancing Script', cursive, sans-serif" font-size="16" font-weight="bold" font-style="italic">BM</text>
+                    </svg>
+                </div>
+                <span class="bn-label">OmegaBeats</span>
+            </button>
+            <button class="bn-item" id="bn-playlists" type="button">
+                <div class="bn-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="4" y="4" width="14" height="14" rx="2" fill="#ff2a2a"/>
+                        <rect x="6" y="6" width="14" height="14" rx="2" fill="#ff2a2a" stroke="#000" stroke-width="1.5"/>
+                        <rect x="8" y="8" width="14" height="14" rx="2" fill="#ff2a2a" stroke="#000" stroke-width="1.5"/>
+                        <path d="M14 13v6.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V18h4v-5h-6z" fill="#ffffff"/>
+                    </svg>
+                </div>
+                <span class="bn-label">Mi playlists</span>
+            </button>
+            <button class="bn-item" id="bn-comunidad" type="button">
+                <div class="bn-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                </div>
+                <span class="bn-label">Comunidad</span>
+            </button>
+        </nav>
+
     </div>
 
-    <div id="statsModal" class="stats-modal hidden" aria-hidden="true">
-      <div class="stats-backdrop" data-close="1"></div>
-      <div class="stats-card" role="dialog" aria-modal="true">
-        <button type="button" class="stats-close" data-close="1" title="Cerrar">✕</button>
-        <h2 class="stats-heading">📚 Mis canciones subidas</h2>
-        <div id="statsList" class="stats-list"></div>
-        <p id="statsEmpty" class="stats-empty hidden">Todavía no has subido ninguna canción.</p>
-        <div class="stats-summary">
-          <div class="stats-summary-item">
-            <span class="stats-summary-label">👥 Total oyentes</span>
-            <strong id="statsTotalListeners" class="stats-summary-value">0</strong>
-          </div>
-          <div class="stats-summary-item stats-summary-earnings">
-            <span class="stats-summary-label">💰 Ganancias totales</span>
-            <strong id="statsTotalEarnings" class="stats-summary-value">$0.00 MXN</strong>
-          </div>
+    <div class="mp-modal" id="mp-create-modal" aria-hidden="true">
+        <div class="mp-modal-backdrop" id="mp-create-backdrop"></div>
+        <div class="mp-modal-box" role="dialog" aria-modal="true" aria-labelledby="mp-create-title">
+            <div class="mp-modal-header">
+                <h2 class="mp-modal-title" id="mp-create-title">Nueva Playlist</h2>
+                <button class="mp-modal-close" id="mp-create-close" type="button" aria-label="Cerrar">&times;</button>
+            </div>
+            <input type="text" class="mp-modal-input" id="mp-create-input"
+                   placeholder="Nombre de la playlist..." maxlength="60" autocomplete="off">
+            <div class="mp-modal-toggle-row">
+                <span class="mp-modal-toggle-label">Hacerla privada</span>
+                <label class="mp-switch">
+                    <input type="checkbox" id="mp-create-private">
+                    <span class="mp-switch-slider"></span>
+                </label>
+            </div>
+            <p class="mp-modal-status" id="mp-create-status"></p>
+            <div class="mp-modal-actions">
+                <button class="mp-modal-btn mp-modal-btn-cancel" id="mp-create-cancel" type="button">Cancelar</button>
+                <button class="mp-modal-btn mp-modal-btn-confirm" id="mp-create-confirm" type="button">Crear</button>
+            </div>
         </div>
-        <p class="stats-hint">💵 Tarifa: $0.20 MXN por oyente.</p>
-      </div>
     </div>
-  </div>
 
-  <div id="modal-susc" class="susc-overlay hidden">
-    <div class="susc-card" role="dialog" aria-modal="true">
-      <button class="susc-x" data-close="modal-susc">✕</button>
-      <div class="susc-header">PLANES DE SUSCRIPCIÓN</div>
-
-      <div class="plan-card" data-plan-card="gratis">
-        <div class="plan-titulo">🆓 PLAN GRATIS</div>
-        <div class="plan-precio">$0 <small>MXN</small></div>
-        <div class="plan-duracion">3 MESES · SOLO UNA VEZ POR CUENTA</div>
-        <ul class="plan-features">
-          <li>🎵 Sube tu música durante 3 meses</li>
-          <li>📊 Consulta tus estadísticas</li>
-          <li>🔒 Este beneficio solo puede usarse una vez por cuenta</li>
-        </ul>
-        <button type="button" class="susc-btn btn-plan" data-plan="gratis">ELEGIR PLAN</button>
-        <p class="plan-usado hidden" data-usado="gratis">✅ Ya utilizaste este plan</p>
-      </div>
-
-      <div class="plan-card" data-plan-card="omega250">
-        <div class="plan-titulo">⭐ OMEGABEATS</div>
-        <div class="plan-precio">$250 <small>MXN</small></div>
-        <div class="plan-duracion">3 MESES</div>
-        <ul class="plan-features">
-          <li>🎵 Sube toda la música que quieras</li>
-          <li>✏️ Edita tus canciones</li>
-          <li>📊 Consulta tus estadísticas</li>
-        </ul>
-        <button type="button" class="susc-btn btn-plan" data-plan="omega250">ELEGIR PLAN</button>
-      </div>
-
-      <div class="plan-card" data-plan-card="omega450">
-        <div class="plan-titulo">👑 OMEGABEATS</div>
-        <div class="plan-precio">$450 <small>MXN</small></div>
-        <div class="plan-duracion">1 AÑO</div>
-        <ul class="plan-features">
-          <li>🎵 Sube toda la música que quieras</li>
-          <li>💰 Monetiza tu música</li>
-          <li>📊 Estadísticas diarias</li>
-          <li>💸 Retira tus ganancias cada 3 meses</li>
-          <li>👑 Acceso a funciones de creador</li>
-        </ul>
-        <button type="button" class="susc-btn btn-plan" data-plan="omega450">ELEGIR PLAN</button>
-      </div>
+    <div class="mp-modal" id="mp-add-modal" aria-hidden="true">
+        <div class="mp-modal-backdrop" id="mp-add-backdrop"></div>
+        <div class="mp-modal-box" role="dialog" aria-modal="true" aria-labelledby="mp-add-title">
+            <div class="mp-modal-header">
+                <h2 class="mp-modal-title" id="mp-add-title">Añadir a Playlist</h2>
+                <button class="mp-modal-close" id="mp-add-close" type="button" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="mp-add-list" id="mp-add-list"></div>
+            <p class="mp-modal-status" id="mp-add-status"></p>
+        </div>
     </div>
-  </div>
 
-  <div id="modal-pago" class="pago-overlay hidden">
-    <button class="pago-x" data-close="modal-pago">✕</button>
-    <div class="pago-wrap">
-      <h1 class="pago-title">📄 COMPROBANTE DE PAGO</h1>
-      <div class="pago-info">
-        <p>Para enviar tu comprobante de pago, <strong>sube el ticket o comprobante a tu cuenta de Dropbox</strong> y genera un <strong>enlace compartido</strong> del documento.</p>
-        <p>Después, pega el enlace de Dropbox en el campo correspondiente.</p>
-        <p class="pago-warn"><strong>Importante:</strong> el enlace debe permitir visualizar el documento correctamente y debe permanecer disponible para su revisión.</p>
-      </div>
-      <form id="pagoForm" class="pago-form">
-        <h2>🔎 Datos del pago</h2>
-        <label>Nombre del titular o remitente
-          <input type="text" name="nombreTitular" required placeholder="Ej: Juan Pérez">
-        </label>
-        <label>Monto pagado (MXN)
-          <input type="number" name="monto" step="0.01" min="0" required placeholder="450.00">
-        </label>
-        <label>Fecha del pago
-          <input type="date" name="fechaPago" required>
-        </label>
-        <label>Número de referencia / clave de rastreo
-          <input type="text" name="referencia" required placeholder="Ej: 1234567890">
-        </label>
-        <label>Banco emisor
-          <input type="text" name="banco" required placeholder="Ej: Nu">
-        </label>
-        <label>Plan seleccionado
-          <input type="text" name="plan" value="Plan OmegaBeats · $450 MXN · 1 año" readonly>
-        </label>
-        <label>📎 Enlace del comprobante (Dropbox)
-          <input type="url" name="comprobante" required placeholder="https://www.dropbox.com/s/.../comprobante.jpg?dl=0">
-        </label>
-        <button type="submit" class="pago-submit">ENVIAR COMPROBANTE</button>
-        <p id="pagoMsg" class="pago-msg"></p>
-      </form>
-      <div class="pago-info" style="margin-top:24px;">
-        <h2 style="font-size:16px;font-weight:800;color:#fff;margin-bottom:10px;">🛡️ VALIDACIÓN DEL ADMINISTRADOR</h2>
-        <p>Cuando envíes la información, la solicitud quedará con el estado <strong style="color:#ffd76a;">🟡 PAGO EN REVISIÓN</strong>.</p>
-        <p>El administrador podrá <strong>👁️ Ver comprobante</strong>, <strong style="color:#4ade80;">✅ Aprobar pago</strong> o <strong style="color:#ff5c5c;">❌ Rechazar pago</strong>.</p>
-        <p class="pago-warn"><strong>Importante:</strong> subir un comprobante NO activa la suscripción. Solo se activará cuando el administrador apruebe la solicitud.</p>
-      </div>
+    <div class="mp-modal" id="name-modal" aria-hidden="true">
+        <div class="mp-modal-backdrop" id="name-modal-backdrop"></div>
+        <div class="mp-modal-box" role="dialog" aria-modal="true" aria-labelledby="name-modal-title">
+            <div class="mp-modal-header">
+                <h2 class="mp-modal-title" id="name-modal-title">Editar nombre de usuario</h2>
+                <button class="mp-modal-close" id="name-modal-close" type="button" aria-label="Cerrar">&times;</button>
+            </div>
+            <input type="text" class="mp-modal-input" id="name-modal-input"
+                   placeholder="Nuevo nombre..." maxlength="30" autocomplete="off">
+            <p class="mp-modal-status" id="name-modal-status"></p>
+            <div class="mp-modal-actions">
+                <button class="mp-modal-btn mp-modal-btn-cancel" id="name-modal-cancel" type="button">Cancelar</button>
+                <button class="mp-modal-btn mp-modal-btn-confirm" id="name-modal-confirm" type="button" disabled>Guardar</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div id="modal-estado" class="pago-overlay hidden">
-    <button class="pago-x" data-close="modal-estado">✕</button>
-    <div class="pago-wrap">
-      <div id="estadoContenido"></div>
+    <audio id="audio-player" preload="metadata"></audio>
+
+    <!-- ==================== MODAL CAMBIAR COLOR ==================== -->
+<div class="mp-modal" id="color-modal" aria-hidden="true">
+    <div class="mp-modal-backdrop" id="color-modal-backdrop"></div>
+    <div class="mp-modal-box" role="dialog" aria-modal="true" aria-labelledby="color-modal-title">
+        <div class="mp-modal-header">
+            <h2 class="mp-modal-title" id="color-modal-title">Cambiar color</h2>
+            <button class="mp-modal-close" id="color-modal-close" type="button" aria-label="Cerrar">&times;</button>
+        </div>
+        <div class="color-options">
+            <button type="button" class="color-option" data-theme="light">
+                <span class="color-swatch color-swatch--light"></span>
+                <span>⚪ Blanco</span>
+            </button>
+            <button type="button" class="color-option" data-theme="dark">
+                <span class="color-swatch color-swatch--dark"></span>
+                <span>⚫ Negro</span>
+            </button>
+        </div>
     </div>
-  </div>
+</div>
 
-  <div id="modal-admin" class="pago-overlay hidden">
-    <button class="pago-x" data-close="modal-admin">✕</button>
-    <div class="pago-wrap">
-      <h1 class="pago-title">🛡️ Panel de administración — Pagos</h1>
-      <div id="adminLista"></div>
+    <div class="share-modal" id="share-modal" aria-hidden="true">
+        <div class="share-modal-backdrop" id="share-modal-backdrop"></div>
+        <div class="share-modal-box" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+            <div class="share-modal-header">
+                <h2 class="share-modal-title" id="share-modal-title">Compartir playlist</h2>
+                <button class="share-modal-close" id="share-modal-close" type="button"
+                        aria-label="Cerrar">&times;</button>
+            </div>
+            <input type="text" class="share-modal-input" id="share-modal-input"
+                   placeholder="Buscar usuario por nombre o correo..." autocomplete="off">
+
+            <div id="share-modal-recent"></div>
+
+            <div class="share-modal-results" id="share-modal-results"></div>
+            <p class="share-modal-status" id="share-modal-status"></p>
+        </div>
     </div>
-  </div>
 
-  <div id="modal-tutorial" class="pago-overlay hidden">
-    <button class="pago-x" data-close="modal-tutorial">✕</button>
-    <div class="pago-wrap">
-      <h1 class="pago-title">🎵 Cómo subir mi canción</h1>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-      <div class="tutorial-intro">
-        Sigue estos pasos para subir tu música a <strong>OmegaBeats</strong>:
-      </div>
-
-      <div class="tutorial-step">
-        <div class="tutorial-num">1</div>
-        <div class="tutorial-body">
-          <h2>🎧 Crea una cuenta en Dropbox</h2>
-          <p>Crea o inicia sesión en tu cuenta de Dropbox.</p>
-          <a href="https://www.dropbox.com/login" target="_blank" rel="noopener" class="tutorial-btn">Abrir Dropbox ↗</a>
-        </div>
-      </div>
-
-      <div class="tutorial-step">
-        <div class="tutorial-num">2</div>
-        <div class="tutorial-body">
-          <h2>📁 Crea una carpeta para tu álbum</h2>
-          <p>Dentro de Dropbox, crea una carpeta con el nombre de tu álbum.</p>
-        </div>
-      </div>
-
-      <div class="tutorial-step">
-        <div class="tutorial-num">3</div>
-        <div class="tutorial-body">
-          <h2>🎵 Agrega tu música y portada</h2>
-          <p>Dentro de la carpeta coloca:</p>
-          <ul>
-            <li>🎵 Tu canción en formato compatible.</li>
-            <li>🖼️ La portada de tu canción o álbum.</li>
-          </ul>
-          <p class="tutorial-warn">📐 La portada debe tener una resolución de <strong>3000 × 3000 píxeles</strong>.</p>
-        </div>
-      </div>
-
-      <div class="tutorial-step">
-        <div class="tutorial-num">4</div>
-        <div class="tutorial-body">
-          <h2>🚀 Entra a tu plan</h2>
-          <p>Cuando tengas preparada tu música, portada y carpeta de Dropbox, entra a <strong>tu plan</strong> en OmegaBeats y selecciona la opción para <strong>subir tu música</strong>.</p>
-        </div>
-      </div>
-
-      <div class="tutorial-step">
-        <div class="tutorial-num">5</div>
-        <div class="tutorial-body">
-          <h2>🔗 Copia el enlace de tu canción</h2>
-          <p>Cuando llegues a la sección <strong>Link de Dropbox</strong>:</p>
-          <ol>
-            <li>Regresa a tu cuenta de Dropbox.</li>
-            <li>Busca el archivo de audio que quieres publicar.</li>
-            <li>Selecciona <strong>Compartir</strong>.</li>
-            <li>Copia el enlace.</li>
-            <li>Regresa a OmegaBeats.</li>
-            <li>Pega el enlace en <strong>Dropbox Audio</strong>.</li>
-          </ol>
-        </div>
-      </div>
-
-      <div class="tutorial-step">
-        <div class="tutorial-num">6</div>
-        <div class="tutorial-body">
-          <h2>🖼️ Copia el enlace de la portada</h2>
-          <p>Regresa nuevamente a Dropbox:</p>
-          <ol>
-            <li>Busca la imagen de tu portada.</li>
-            <li>Selecciona <strong>Compartir</strong>.</li>
-            <li>Copia el enlace.</li>
-            <li>Regresa a OmegaBeats.</li>
-            <li>Pega el enlace en <strong>Dropbox Imagen / Portada</strong>.</li>
-          </ol>
-        </div>
-      </div>
-
-      <div class="tutorial-step">
-        <div class="tutorial-num">7</div>
-        <div class="tutorial-body">
-          <h2>✅ Publica tu música</h2>
-          <p>Revisa que todos los datos estén completos y selecciona <strong>Publicar</strong>.</p>
-        </div>
-      </div>
-
-      <div class="tutorial-final">
-        🎉 <strong>¡Listo! Tu música quedará publicada en OmegaBeats.</strong>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════ MODAL: VENDER BEATS (solo plan $450) ═══════════ -->
-  <div id="modal-beats" class="pago-overlay hidden">
-    <button class="pago-x" data-close="modal-beats">✕</button>
-    <div class="pago-wrap">
-      <h1 class="pago-title">🎧 Vender Beats</h1>
-
-      <div class="pago-info">
-        <p>Publica tus beats y define tus propios precios. Los compradores podrán contactarte directamente mediante los enlaces que configures para cada licencia.</p>
-        <p class="pago-warn"><strong>Importante:</strong> Función exclusiva del <strong>Plan $450 MXN</strong>. La portada debe ser de <strong>3000 × 3000 píxeles</strong>.</p>
-      </div>
-
-      <form id="formBeat" class="pago-form">
-        <h2>📝 Datos del Beat</h2>
-
-        <label>Título del Beat
-          <input type="text" name="beatTitulo" required placeholder="Ej: Midnight Trap">
-        </label>
-
-        <label>Género o estilo musical
-          <input type="text" name="beatGenero" required placeholder="Ej: Trap, Reggaetón, Hip-Hop...">
-        </label>
-
-        <label>🔊 Link de audio (Dropbox)
-          <input type="url" name="beatAudio" required
-                 placeholder="https://www.dropbox.com/s/.../beat.mp3?dl=0">
-        </label>
-
-        <label>🖼️ Link de portada (Dropbox · 3000×3000 px)
-          <input type="url" name="beatPortada" required
-                 placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
-        </label>
-
-        <h2 style="margin-top:24px;">💰 Licencias y contacto</h2>
-
-        <div class="beat-licencia">
-          <div class="beat-licencia-title">🎵 Licencia MP3</div>
-          <label>Precio (MXN)
-            <input type="number" name="precioMP3" step="0.01" min="0" required placeholder="150.00">
-          </label>
-          <label>Enlace de contacto
-            <input type="url" name="contactoMP3" required
-                   placeholder="https://wa.me/52... o https://instagram.com/...">
-          </label>
-        </div>
-
-        <div class="beat-licencia">
-          <div class="beat-licencia-title">🎼 Licencia WAV</div>
-          <label>Precio (MXN)
-            <input type="number" name="precioWAV" step="0.01" min="0" required placeholder="300.00">
-          </label>
-          <label>Enlace de contacto
-            <input type="url" name="contactoWAV" required
-                   placeholder="https://wa.me/52... o https://instagram.com/...">
-          </label>
-        </div>
-
-        <div class="beat-licencia">
-          <div class="beat-licencia-title">👑 Licencia Exclusiva</div>
-          <label>Precio (MXN)
-            <input type="number" name="precioExclusiva" step="0.01" min="0" required placeholder="1500.00">
-          </label>
-          <label>Enlace de contacto
-            <input type="url" name="contactoExclusiva" required
-                   placeholder="https://wa.me/52... o https://instagram.com/...">
-          </label>
-        </div>
-
-        <button type="submit" id="beatSubmitBtn" class="pago-submit" style="margin-top:20px;">
-          SUBIR BEAT
-        </button>
-        <p id="beatMsg" class="pago-msg"></p>
-      </form>
-
-      <section id="beatsSection" class="beats-section">
-        <div class="beats-header">
-          <h2 style="font-size:18px;font-weight:800;color:#fff;">🎧 Beats publicados</h2>
-          <span id="beatsCount" class="beats-badge">0</span>
-        </div>
-        <div id="beatsList" class="beats-list"></div>
-        <p id="beatsEmpty" class="beats-empty">Todavía no hay beats publicados.</p>
-      </section>
-    </div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script type="module" src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
