@@ -266,6 +266,8 @@ onAuthStateChanged(auth, (user) => {
     escucharUsuario(user.uid);
     detectarAdmin(user);
     actualizarAccesoSubida();
+    // 🆕 Evaluar botón Vender Beats al iniciar sesión
+    if (typeof actualizarBotonBeats === 'function') actualizarBotonBeats();
   } else {
     loginBtn.classList.remove('hidden');
     loginBtn.disabled = false;
@@ -296,6 +298,8 @@ onAuthStateChanged(auth, (user) => {
     cerrarEditModal();
     cerrarStatsModal();
     actualizarAccesoSubida();
+    // 🆕 Ocultar botón Vender Beats al cerrar sesión
+    if (typeof actualizarBotonBeats === 'function') actualizarBotonBeats();
   }
 });
 
@@ -500,7 +504,6 @@ async function eliminarCancion(id, boton, titulo, cancion) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Intercepta modo álbum (por si el usuario da Enter en un input)
   if (modoSubida === 'album') { subirAlbum(); return; }
 
   if (!usuarioActual) { mostrarStatus('Debes iniciar sesión primero', 'error'); return; }
@@ -1625,6 +1628,8 @@ function escucharSuscripcion(uid) {
     }
 
     actualizarAccesoSubida();
+    // 🆕 Reevaluar visibilidad del botón Vender Beats cada vez que cambia la suscripción
+    if (typeof actualizarBotonBeats === 'function') actualizarBotonBeats();
   }, (err) => console.error('Error suscripción:', err));
 }
 
@@ -1954,6 +1959,7 @@ albumSubmitBtn?.addEventListener('click', subirAlbum);
 
 /* Estado inicial: 1 canción de ejemplo */
 renderAlbumSongs(1);
+
 /* ═══════════════════════════════════════════════════════════════
    🎧 VENDER BEATS — Solo plan $450 (omega450)
    ═══════════════════════════════════════════════════════════════ */
@@ -1974,7 +1980,9 @@ function tienePlan450() {
   if (!usuarioActual || !suscripcionActual) return false;
   const est = String(suscripcionActual.estado || '').toLowerCase();
   if (est !== 'aprobado' && est !== 'activa') return false;
-  if (String(suscripcionActual.plan || '').toLowerCase() !== 'omega450') return false;
+  const plan = String(suscripcionActual.plan || '').toLowerCase();
+  // Acepta 'omega450' y también el legacy 'anual' (que era el plan de $450)
+  if (plan !== 'omega450' && plan !== 'anual') return false;
   const venc = tsToDate(suscripcionActual.fechaVencimiento);
   return !venc || new Date() < venc;
 }
@@ -1986,6 +1994,7 @@ function actualizarBotonBeats() {
   if (tienePlan450()) beatsBtn.classList.remove('hidden');
   else beatsBtn.classList.add('hidden');
 }
+window.actualizarBotonBeats = actualizarBotonBeats;
 
 /* Escuchar cambios en la colección "beats" */
 function escucharBeats() {
@@ -2130,15 +2139,6 @@ formBeat?.addEventListener('submit', async (e) => {
     beatSubmitBtn.textContent = 'SUBIR BEAT';
   }
 });
-
-/* ── Enganchar con el ciclo de autenticación ── */
-
-/* Actualizar botón cada vez que cambie la suscripción */
-const _origActualizarAcceso = window.actualizarAccesoSubida;
-window.actualizarAccesoSubida = function () {
-  _origActualizarAcceso?.();
-  actualizarBotonBeats();
-};
 
 /* En logout, limpiar beats y ocultar botón */
 logoutBtn?.addEventListener('click', () => {
