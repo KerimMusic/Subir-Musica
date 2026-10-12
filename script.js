@@ -2063,7 +2063,9 @@ beatsBtn?.addEventListener('click', () => {
   setTimeout(abrirModalBeats, 120);
 });
 
-/* Envío del formulario */
+/* Envío del formulario — guarda en 2 lugares:
+   1) historial_usuarios/{uid}/beats  (personal, privado)
+   2) beats                            (catálogo público) */
 formBeat?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -2111,18 +2113,28 @@ formBeat?.addEventListener('submit', async (e) => {
   beatMsg.className = 'pago-msg';
   beatMsg.textContent = 'Guardando beat...';
 
+  const uid        = usuarioActual.uid;
+  const audioUrl   = dropboxDirecto(audioRaw);
+  const portadaUrl = dropboxDirecto(portRaw);
+
+  const payload = {
+    titulo,
+    genero,
+    audioUrl,
+    portadaUrl,
+    licencias,
+    uid,
+    email:  usuarioActual.email || '',
+    nombre: usuarioActual.displayName || '',
+    fecha:  serverTimestamp()
+  };
+
   try {
-    await addDoc(collection(db, 'beats'), {
-      titulo,
-      genero,
-      audioUrl:   dropboxDirecto(audioRaw),
-      portadaUrl: dropboxDirecto(portRaw),
-      licencias,
-      uid:   usuarioActual.uid,
-      email: usuarioActual.email || '',
-      nombre: usuarioActual.displayName || '',
-      fecha: serverTimestamp()
-    });
+    // 1) Guardar en la subcolección personal del usuario
+    await addDoc(collection(db, 'historial_usuarios', uid, 'beats'), payload);
+
+    // 2) Publicar en el catálogo global
+    await addDoc(collection(db, 'beats'), payload);
 
     beatMsg.className = 'pago-msg ok';
     beatMsg.textContent = '✅ Beat publicado correctamente.';
