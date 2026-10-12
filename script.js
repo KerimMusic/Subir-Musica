@@ -266,7 +266,6 @@ onAuthStateChanged(auth, (user) => {
     escucharUsuario(user.uid);
     detectarAdmin(user);
     actualizarAccesoSubida();
-    // 🆕 Evaluar botón Vender Beats al iniciar sesión
     if (typeof actualizarBotonBeats === 'function') actualizarBotonBeats();
   } else {
     loginBtn.classList.remove('hidden');
@@ -298,7 +297,6 @@ onAuthStateChanged(auth, (user) => {
     cerrarEditModal();
     cerrarStatsModal();
     actualizarAccesoSubida();
-    // 🆕 Ocultar botón Vender Beats al cerrar sesión
     if (typeof actualizarBotonBeats === 'function') actualizarBotonBeats();
   }
 });
@@ -1628,7 +1626,6 @@ function escucharSuscripcion(uid) {
     }
 
     actualizarAccesoSubida();
-    // 🆕 Reevaluar visibilidad del botón Vender Beats cada vez que cambia la suscripción
     if (typeof actualizarBotonBeats === 'function') actualizarBotonBeats();
   }, (err) => console.error('Error suscripción:', err));
 }
@@ -1961,7 +1958,7 @@ albumSubmitBtn?.addEventListener('click', subirAlbum);
 renderAlbumSongs(1);
 
 /* ═══════════════════════════════════════════════════════════════
-   🎧 VENDER BEATS — Solo plan $450 (omega450)
+   🎧 VENDER BEATS — Solo plan $450 (omega450 o anual)
    ═══════════════════════════════════════════════════════════════ */
 
 const beatsBtn      = document.getElementById('beatsBtn');
@@ -1981,7 +1978,7 @@ function tienePlan450() {
   const est = String(suscripcionActual.estado || '').toLowerCase();
   if (est !== 'aprobado' && est !== 'activa') return false;
   const plan = String(suscripcionActual.plan || '').toLowerCase();
-  // Acepta 'omega450' y también el legacy 'anual' (que era el plan de $450)
+  // Acepta 'omega450' y también el legacy 'anual'
   if (plan !== 'omega450' && plan !== 'anual') return false;
   const venc = tsToDate(suscripcionActual.fechaVencimiento);
   return !venc || new Date() < venc;
