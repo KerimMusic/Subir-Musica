@@ -2133,17 +2133,14 @@ formBeat?.addEventListener('submit', async (e) => {
 
 /* ── Enganchar con el ciclo de autenticación ── */
 
-/* 1) Cuando el usuario inicia sesión, ocultar/mostrar según plan */
-const _origOnAuthBeats = true; // marcador visual
-
-/* 2) Actualizar botón cada vez que cambie la suscripción */
+/* Actualizar botón cada vez que cambie la suscripción */
 const _origActualizarAcceso = window.actualizarAccesoSubida;
 window.actualizarAccesoSubida = function () {
   _origActualizarAcceso?.();
   actualizarBotonBeats();
 };
 
-/* 3) En logout, limpiar beats y ocultar botón */
+/* En logout, limpiar beats y ocultar botón */
 logoutBtn?.addEventListener('click', () => {
   if (unsubscribeBeats) { unsubscribeBeats(); unsubscribeBeats = null; }
   beatsBtn?.classList.add('hidden');
@@ -2152,8 +2149,8 @@ logoutBtn?.addEventListener('click', () => {
   if (beatsEmpty) beatsEmpty.classList.remove('hidden');
 });
 
-/* 4) Estado inicial al cargar */
+/* Estado inicial al cargar */
+actualizarBotonBeats();
 document.addEventListener('DOMContentLoaded', () => {
   actualizarBotonBeats();
 });
-actualizarBotonBeats();
