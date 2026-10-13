@@ -169,14 +169,11 @@ function normalizarWhatsApp(valor) {
   const v = String(valor).trim();
   if (!v) return '';
 
-  // ✅ Ya es un enlace completo → se respeta tal cual
   if (/^https?:\/\//i.test(v)) return v;
 
-  // 🔢 Solo números: limpia espacios, guiones, paréntesis, "+"
   let soloDigitos = v.replace(/\D/g, '');
   if (!soloDigitos) return '';
 
-  // 🇲🇽 Si son 10 dígitos, asumimos México y agregamos el 52
   if (soloDigitos.length === 10) soloDigitos = '52' + soloDigitos;
 
   return 'https://wa.me/' + soloDigitos;
@@ -187,16 +184,13 @@ function normalizarTelegram(valor) {
   const v = String(valor).trim();
   if (!v) return '';
 
-  // ✅ Ya es un enlace completo → se respeta tal cual
   if (/^https?:\/\//i.test(v)) return v;
 
-  // 📱 Si es número de teléfono → t.me/+<digitos>
   if (/^\+?\d{6,}$/.test(v)) {
     const soloDigitos = v.replace(/\D/g, '');
     return 'https://t.me/+' + soloDigitos;
   }
 
-  // 👤 Usuario: quita @ y genera t.me/usuario
   const usuario = v.replace(/^@/, '').trim();
   if (!usuario) return '';
   return 'https://t.me/' + usuario;
@@ -1844,15 +1838,18 @@ const albumImagen    = document.getElementById('albumImagen');
 const albumSongsCont = document.getElementById('albumSongsContainer');
 const albumSubmitBtn = document.getElementById('albumSubmitBtn');
 
-/* 🥁 Referencias de Beats (ahora incluye WhatsApp y Telegram) */
-const beatsBtn          = document.getElementById('beatsBtn');
-const beatsSubmitBtn    = document.getElementById('beatsSubmitBtn');
-const beatCreadorInput  = document.getElementById('beatCreador');
-const beatTituloInput   = document.getElementById('beatTitulo');
-const beatAudioInput    = document.getElementById('beatAudio');
-const beatImagenInput   = document.getElementById('beatImagen');
-const beatWhatsappInput = document.getElementById('beatWhatsapp');
-const beatTelegramInput = document.getElementById('beatTelegram');
+/* 🥁 Referencias de Beats (con WhatsApp, Telegram, precios y personalizado) */
+const beatsBtn             = document.getElementById('beatsBtn');
+const beatsSubmitBtn       = document.getElementById('beatsSubmitBtn');
+const beatCreadorInput     = document.getElementById('beatCreador');
+const beatTituloInput      = document.getElementById('beatTitulo');
+const beatAudioInput       = document.getElementById('beatAudio');
+const beatImagenInput      = document.getElementById('beatImagen');
+const beatWhatsappInput    = document.getElementById('beatWhatsapp');
+const beatTelegramInput    = document.getElementById('beatTelegram');
+const beatPrecioMp3Input   = document.getElementById('beatPrecioMp3');
+const beatPrecioWavInput   = document.getElementById('beatPrecioWav');
+const beatPersonalizadoInp = document.getElementById('beatPersonalizado');
 const PLAN_REQUERIDO_BEATS = 'omega450';
 
 let unsubscribeBeatsSusc = null;
@@ -2134,24 +2131,40 @@ async function publicarBeat() {
     return;
   }
 
-  const creador   = (beatCreadorInput?.value || '').trim();
-  const titulo    = (beatTituloInput?.value  || '').trim();
-  const audioRaw  = (beatAudioInput?.value   || '').trim();
-  const imagenRaw = (beatImagenInput?.value  || '').trim();
+  const creador     = (beatCreadorInput?.value || '').trim();
+  const titulo      = (beatTituloInput?.value  || '').trim();
+  const audioRaw    = (beatAudioInput?.value   || '').trim();
+  const imagenRaw   = (beatImagenInput?.value  || '').trim();
   const whatsappRaw = (beatWhatsappInput?.value || '').trim();
   const telegramRaw = (beatTelegramInput?.value || '').trim();
+  const precioMp3Raw = (beatPrecioMp3Input?.value || '').trim();
+  const precioWavRaw = (beatPrecioWavInput?.value || '').trim();
+  const personalizado = !!beatPersonalizadoInp?.checked;
 
   if (!creador || !titulo || !audioRaw) {
     mostrarStatus('Completa creador, título y audio', 'error');
     return;
   }
 
-  const audioUrl  = dropboxDirecto(audioRaw);
-  const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
-
   // 📞 Normaliza contactos a enlaces válidos (opcional)
   const whatsappUrl = normalizarWhatsApp(whatsappRaw);
   const telegramUrl = normalizarTelegram(telegramRaw);
+
+  // 💰 Convierte los precios a número (o null si está vacío)
+  const precioMp3 = precioMp3Raw === '' ? null : Number(precioMp3Raw);
+  const precioWav = precioWavRaw === '' ? null : Number(precioWavRaw);
+
+  if (precioMp3 !== null && (isNaN(precioMp3) || precioMp3 < 0)) {
+    mostrarStatus('El precio MP3 no es válido', 'error');
+    return;
+  }
+  if (precioWav !== null && (isNaN(precioWav) || precioWav < 0)) {
+    mostrarStatus('El precio WAV no es válido', 'error');
+    return;
+  }
+
+  const audioUrl  = dropboxDirecto(audioRaw);
+  const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
 
   beatsSubmitBtn.disabled = true;
   beatsSubmitBtn.innerHTML = '<span class="loader"></span>Verificando audio...';
@@ -2176,8 +2189,11 @@ async function publicarBeat() {
       colaboradores: [],
       audioUrl,
       imagenUrl,
-      whatsapp: whatsappUrl,   // 🆕 Enlace wa.me (o vacío)
-      telegram: telegramUrl,   // 🆕 Enlace t.me  (o vacío)
+      whatsapp: whatsappUrl,
+      telegram: telegramUrl,
+      precioMp3,
+      precioWav,
+      personalizado,
       origen: 'dropbox',
       esBeat: true,
       uid,
@@ -2189,12 +2205,15 @@ async function publicarBeat() {
 
     mostrarStatus('✅ Beat subido correctamente', 'ok');
 
-    if (beatCreadorInput)  beatCreadorInput.value  = '';
-    if (beatTituloInput)   beatTituloInput.value   = '';
-    if (beatAudioInput)    beatAudioInput.value    = '';
-    if (beatImagenInput)   beatImagenInput.value   = '';
-    if (beatWhatsappInput) beatWhatsappInput.value = '';
-    if (beatTelegramInput) beatTelegramInput.value = '';
+    if (beatCreadorInput)     beatCreadorInput.value     = '';
+    if (beatTituloInput)      beatTituloInput.value      = '';
+    if (beatAudioInput)       beatAudioInput.value       = '';
+    if (beatImagenInput)      beatImagenInput.value      = '';
+    if (beatWhatsappInput)    beatWhatsappInput.value    = '';
+    if (beatTelegramInput)    beatTelegramInput.value    = '';
+    if (beatPrecioMp3Input)   beatPrecioMp3Input.value   = '';
+    if (beatPrecioWavInput)   beatPrecioWavInput.value   = '';
+    if (beatPersonalizadoInp) beatPersonalizadoInp.checked = false;
 
     beatsSubmitBtn.disabled = false;
     beatsSubmitBtn.textContent = 'Subir Beat';
