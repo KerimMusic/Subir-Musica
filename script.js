@@ -1786,7 +1786,8 @@ document.getElementById('tutorialBtn')?.addEventListener('click', () => {
 
 let modoSubida = 'single';
 
-const uploadModeBtns = document.querySelectorAll('#uploadMode .mode-btn');
+/* 🎯 Excluimos #beatsBtn porque ahora comparte la clase .mode-btn */
+const uploadModeBtns = document.querySelectorAll('#uploadMode .mode-btn:not(#beatsBtn)');
 const singleModeWrap = document.getElementById('singleModeWrap');
 const albumModeWrap  = document.getElementById('albumModeWrap');
 const albumNombre    = document.getElementById('albumNombre');
@@ -1954,3 +1955,172 @@ albumSubmitBtn?.addEventListener('click', subirAlbum);
 
 /* Estado inicial: 1 canción de ejemplo */
 renderAlbumSongs(1);
+
+/* ═══════════════════════════════════════════════════════════════
+   🥁 SUBIR BEATS — Solo plan anual $450 MXN aprobado y vigente
+   ═══════════════════════════════════════════════════════════════ */
+
+const PLAN_REQUERIDO_BEATS = 'omega450';
+
+const beatsBtn  = document.getElementById('beatsBtn');
+const beatsForm = document.getElementById('beatsForm');
+const beatsMsg  = document.getElementById('beatsMsg');
+
+let unsubscribeBeatsSusc = null;
+
+/**
+ * Valida el documento de suscripción en Firestore (fuente de verdad).
+ * Devuelve true solo si: plan === omega450, estado aprobado/activa y no vencido.
+ */
+async function verificarAccesoBeatsFirestore(uid) {
+  if (!uid) return false;
+  try {
+    const snap = await getDoc(doc(db, 'suscripciones', uid));
+    if (!snap.exists()) return false;
+
+    const data = snap.data() || {};
+    const est  = String(data.estado || '').toLowerCase();
+    const plan = String(data.plan   || '').toLowerCase();
+
+    if (est !== 'aprobado' && est !== 'activa') return false;
+    if (plan !== PLAN_REQUERIDO_BEATS) return false;
+
+    const venc = tsToDate(data.fechaVencimiento);
+    if (venc && new Date() >= venc) return false;
+
+    return true;
+  } catch (e) {
+    console.warn('[beats] verificarAccesoBeatsFirestore:', e);
+    return false;
+  }
+}
+
+/** Muestra u oculta el botón de beats según el estado del doc. */
+function aplicarVisibilidadBotonBeats(datos) {
+  if (!beatsBtn) return;
+
+  let ok = false;
+  if (usuarioActual && datos) {
+    const est  = String(datos.estado || '').toLowerCase();
+    const plan = String(datos.plan   || '').toLowerCase();
+    const venc = tsToDate(datos.fechaVencimiento);
+
+    ok = (est === 'aprobado' || est === 'activa')
+      && plan === PLAN_REQUERIDO_BEATS
+      && (!venc || new Date() < venc);
+  }
+
+  beatsBtn.classList.toggle('hidden', !ok);
+}
+
+/* Listener propio — no interfiere con escucharSuscripcion existente */
+onAuthStateChanged(auth, (user) => {
+  if (unsubscribeBeatsSusc) {
+    unsubscribeBeatsSusc();
+    unsubscribeBeatsSusc = null;
+  }
+
+  if (!user) {
+    aplicarVisibilidadBotonBeats(null);
+    return;
+  }
+
+  unsubscribeBeatsSusc = onSnapshot(
+    doc(db, 'suscripciones', user.uid),
+    (snap) => {
+      const datos = snap.exists() ? snap.data() : null;
+      aplicarVisibilidadBotonBeats(datos);
+    },
+    (err) => console.warn('[beats] onSnapshot suscripciones:', err)
+  );
+});
+
+/* Abrir modal desde el botón del formulario (ya NO está en el menú) */
+beatsBtn?.addEventListener('click', async () => {
+  if (!usuarioActual) {
+    mostrarStatus('Debes iniciar sesión primero', 'error');
+    return;
+  }
+
+  // Verificación directa contra Firestore (evita manipulación local)
+  const permitido = await verificarAccesoBeatsFirestore(usuarioActual.uid);
+  if (!permitido) {
+    mostrarStatus('Esta función solo está disponible con el plan anual de $450 MXN activo.', 'error');
+    abrirModalSusc('modal-susc');
+    return;
+  }
+
+  if (beatsMsg) { beatsMsg.className = 'pago-msg'; beatsMsg.textContent = ''; }
+  abrirModalSusc('modal-beats');
+});
+
+/* Envío del formulario de beats */
+beatsForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const setMsg = (txt, tipo = '') => {
+    if (!beatsMsg) return;
+    beatsMsg.className = 'pago-msg' + (tipo ? ' ' + tipo : '');
+    beatsMsg.textContent = txt;
+  };
+
+  if (!usuarioActual) { setMsg('Inicia sesión primero.', 'error'); return; }
+
+  // 🛡️ Validación con Firebase (fuente de verdad)
+  const permitido = await verificarAccesoBeatsFirestore(usuarioActual.uid);
+  if (!permitido) {
+    setMsg('❌ Necesitas el plan anual de $450 MXN aprobado y vigente.', 'error');
+    return;
+  }
+
+  const fd       = new FormData(beatsForm);
+  const creador  = String(fd.get('creador') || '').trim();
+  const titulo   = String(fd.get('titulo')  || '').trim();
+  const audioRaw = String(fd.get('audio')   || '').trim();
+  const imagenRaw= String(fd.get('imagen')  || '').trim();
+
+  if (!creador || !titulo || !audioRaw) {
+    setMsg('Completa creador, título y URL de audio.', 'error');
+    return;
+  }
+  if (!/^https?:\/\//i.test(audioRaw)) {
+    setMsg('La URL de audio debe iniciar con https://', 'error');
+    return;
+  }
+  if (imagenRaw && !/^https?:\/\//i.test(imagenRaw)) {
+    setMsg('La URL de imagen debe iniciar con https://', 'error');
+    return;
+  }
+
+  const btn = beatsForm.querySelector('.pago-submit');
+  const original = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = 'PUBLICANDO...'; }
+  setMsg('Guardando beat...');
+
+  try {
+    const audioUrl  = dropboxDirecto(audioRaw);
+    const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
+
+    await addDoc(collection(db, 'beats'), {
+      creador,
+      titulo,
+      audioUrl,
+      imagenUrl,
+      tipo:  'beat',
+      uid:   usuarioActual.uid,
+      email: usuarioActual.email || '',
+      plan:  PLAN_REQUERIDO_BEATS,
+      fecha: serverTimestamp()
+    });
+
+    setMsg('✅ Beat publicado correctamente.', 'ok');
+    beatsForm.reset();
+
+    setTimeout(() => cerrarModalSusc('modal-beats'), 1500);
+  } catch (err) {
+    console.error('[beats] error:', err);
+    setMsg('Error: ' + err.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = original || 'PUBLICAR BEAT'; }
+  }
+});
