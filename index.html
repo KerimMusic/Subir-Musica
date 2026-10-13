@@ -64,6 +64,10 @@
           <button type="button" class="mode-btn active" data-mode="single">🎵 Canción individual</button>
           <button type="button" class="mode-btn" data-mode="album">💿 Álbum completo</button>
         </div>
+        <button id="beatsBtn" class="mode-btn hidden" type="button" style="margin-top:8px;">
+          🥁 Subir Beats <small style="opacity:.75;font-weight:600;">· exclusivo plan anual $450</small>
+        </button>
+        <p class="hint">La opción de beats solo aparece si tienes el plan anual de $450 MXN activo y aprobado.</p>
       </div>
 
       <!-- ═══ MODO 1: CANCIÓN INDIVIDUAL ═══ -->
@@ -480,6 +484,42 @@
       <div class="tutorial-final">
         🎉 <strong>¡Listo! Tu música quedará publicada en OmegaBeats.</strong>
       </div>
+    </div>
+  </div>
+
+  <!-- 🥁 MODAL: SUBIR BEATS (solo plan anual $450 MXN aprobado) -->
+  <div id="modal-beats" class="pago-overlay hidden">
+    <button class="pago-x" data-close="modal-beats">✕</button>
+    <div class="pago-wrap">
+      <h1 class="pago-title">🥁 Subir Beat</h1>
+
+      <div class="pago-info">
+        <p>Publica tu beat en <strong>OmegaBeats</strong>.</p>
+        <p class="pago-warn"><strong>Exclusivo:</strong> esta función está disponible únicamente para usuarios con la <strong>suscripción anual de $450 MXN activa y aprobada</strong>.</p>
+      </div>
+
+      <form id="beatsForm" class="pago-form">
+        <h2>🎧 Datos del beat</h2>
+
+        <label>Nombre del creador
+          <input type="text" name="creador" required placeholder="Ej: DJ Producer">
+        </label>
+
+        <label>Título del beat
+          <input type="text" name="titulo" required placeholder="Ej: Trap Beat #1">
+        </label>
+
+        <label>URL del audio (Dropbox)
+          <input type="url" name="audio" required placeholder="https://www.dropbox.com/s/.../beat.mp3?dl=0">
+        </label>
+
+        <label>URL de la imagen de portada (Dropbox)
+          <input type="url" name="imagen" placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
+        </label>
+
+        <button type="submit" class="pago-submit">PUBLICAR BEAT</button>
+        <p id="beatsMsg" class="pago-msg"></p>
+      </form>
     </div>
   </div>
 
