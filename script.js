@@ -295,6 +295,16 @@ onAuthStateChanged(auth, (user) => {
     cerrarPlayer();
     cerrarEditModal();
     cerrarStatsModal();
+
+    /* Resetear modo a single al cerrar sesión */
+    modoSubida = 'single';
+    singleModeWrap?.classList.remove('hidden');
+    albumModeWrap?.classList.add('hidden');
+    beatsModeWrap?.classList.add('hidden');
+    beatsBtn?.classList.add('hidden');
+    beatsBtn?.classList.remove('active');
+    uploadModeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === 'single'));
+
     actualizarAccesoSubida();
   }
 });
@@ -500,8 +510,9 @@ async function eliminarCancion(id, boton, titulo, cancion) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // Intercepta modo álbum (por si el usuario da Enter en un input)
+  // 🔀 Intercepta modos que no son "single"
   if (modoSubida === 'album') { subirAlbum(); return; }
+  if (modoSubida === 'beats') { publicarBeat(); return; }
 
   if (!usuarioActual) { mostrarStatus('Debes iniciar sesión primero', 'error'); return; }
 
@@ -1781,31 +1792,53 @@ document.getElementById('tutorialBtn')?.addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   💿 SUBIDA DE ÁLBUM COMPLETO
+   💿 SUBIDA DE ÁLBUM COMPLETO + 🥁 SUBIR BEATS
    ═══════════════════════════════════════════════════════════════ */
 
 let modoSubida = 'single';
 
-/* 🎯 Excluimos #beatsBtn porque ahora comparte la clase .mode-btn */
+/* 🎯 Excluimos #beatsBtn porque comparte la clase .mode-btn pero NO es un modo single/album */
 const uploadModeBtns = document.querySelectorAll('#uploadMode .mode-btn:not(#beatsBtn)');
 const singleModeWrap = document.getElementById('singleModeWrap');
 const albumModeWrap  = document.getElementById('albumModeWrap');
+const beatsModeWrap  = document.getElementById('beatsModeWrap');
 const albumNombre    = document.getElementById('albumNombre');
 const albumCantidad  = document.getElementById('albumCantidad');
 const albumImagen    = document.getElementById('albumImagen');
 const albumSongsCont = document.getElementById('albumSongsContainer');
 const albumSubmitBtn = document.getElementById('albumSubmitBtn');
 
+/* 🥁 Referencias de Beats */
+const beatsBtn         = document.getElementById('beatsBtn');
+const beatsSubmitBtn   = document.getElementById('beatsSubmitBtn');
+const beatsMsg         = document.getElementById('beatsMsg');
+const beatCreadorInput = document.getElementById('beatCreador');
+const beatTituloInput  = document.getElementById('beatTitulo');
+const beatAudioInput   = document.getElementById('beatAudio');
+const beatImagenInput  = document.getElementById('beatImagen');
+const PLAN_REQUERIDO_BEATS = 'omega450';
+
+let unsubscribeBeatsSusc = null;
+
+/* ─── Cambio de modo: single / album ─── */
 uploadModeBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const modo = btn.dataset.mode;
     if (modo === modoSubida) return;
     modoSubida = modo;
+
     uploadModeBtns.forEach(b => b.classList.toggle('active', b === btn));
+    beatsBtn?.classList.remove('active');
+
     singleModeWrap?.classList.toggle('hidden', modo !== 'single');
     albumModeWrap?.classList.toggle('hidden', modo !== 'album');
+    beatsModeWrap?.classList.add('hidden');
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════
+   💿 MODO ÁLBUM
+   ═══════════════════════════════════════════════════════════════ */
 
 function crearFilaAlbum(num) {
   const wrap = document.createElement('div');
@@ -1960,14 +1993,6 @@ renderAlbumSongs(1);
    🥁 SUBIR BEATS — Solo plan anual $450 MXN aprobado y vigente
    ═══════════════════════════════════════════════════════════════ */
 
-const PLAN_REQUERIDO_BEATS = 'omega450';
-
-const beatsBtn  = document.getElementById('beatsBtn');
-const beatsForm = document.getElementById('beatsForm');
-const beatsMsg  = document.getElementById('beatsMsg');
-
-let unsubscribeBeatsSusc = null;
-
 /**
  * Valida el documento de suscripción en Firestore (fuente de verdad).
  * Devuelve true solo si: plan === omega450, estado aprobado/activa y no vencido.
@@ -2011,6 +2036,25 @@ function aplicarVisibilidadBotonBeats(datos) {
   }
 
   beatsBtn.classList.toggle('hidden', !ok);
+
+  /* Si estaba en modo beats y pierde acceso, volvemos a single */
+  if (!ok && modoSubida === 'beats') {
+    modoSubida = 'single';
+    beatsBtn.classList.remove('active');
+    beatsModeWrap?.classList.add('hidden');
+    singleModeWrap?.classList.remove('hidden');
+    uploadModeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === 'single'));
+  }
+}
+
+function setBeatsMsg(txt = '', tipo = '') {
+  if (!beatsMsg) return;
+  beatsMsg.className = 'hint';
+  beatsMsg.style.color = tipo === 'error' ? '#cc0000' : tipo === 'ok' ? '#0a7d3a' : '#555';
+  beatsMsg.style.textAlign = 'center';
+  beatsMsg.style.minHeight = '18px';
+  beatsMsg.style.marginTop = '12px';
+  beatsMsg.textContent = txt;
 }
 
 /* Listener propio — no interfiere con escucharSuscripcion existente */
@@ -2035,14 +2079,13 @@ onAuthStateChanged(auth, (user) => {
   );
 });
 
-/* Abrir modal desde el botón del formulario (ya NO está en el menú) */
+/* 🥁 Cambiar la vista al modo "beats" (sin modal) */
 beatsBtn?.addEventListener('click', async () => {
   if (!usuarioActual) {
     mostrarStatus('Debes iniciar sesión primero', 'error');
     return;
   }
 
-  // Verificación directa contra Firestore (evita manipulación local)
   const permitido = await verificarAccesoBeatsFirestore(usuarioActual.uid);
   if (!permitido) {
     mostrarStatus('Esta función solo está disponible con el plan anual de $450 MXN activo.', 'error');
@@ -2050,52 +2093,49 @@ beatsBtn?.addEventListener('click', async () => {
     return;
   }
 
-  if (beatsMsg) { beatsMsg.className = 'pago-msg'; beatsMsg.textContent = ''; }
-  abrirModalSusc('modal-beats');
+  modoSubida = 'beats';
+  uploadModeBtns.forEach(b => b.classList.remove('active'));
+  beatsBtn.classList.add('active');
+
+  singleModeWrap?.classList.add('hidden');
+  albumModeWrap?.classList.add('hidden');
+  beatsModeWrap?.classList.remove('hidden');
+
+  setBeatsMsg('');
 });
 
-/* Envío del formulario de beats */
-beatsForm?.addEventListener('submit', async (e) => {
-  e.preventDefault();
+/* 🥁 Publicar beat */
+async function publicarBeat() {
+  if (!usuarioActual) { setBeatsMsg('Inicia sesión primero.', 'error'); return; }
 
-  const setMsg = (txt, tipo = '') => {
-    if (!beatsMsg) return;
-    beatsMsg.className = 'pago-msg' + (tipo ? ' ' + tipo : '');
-    beatsMsg.textContent = txt;
-  };
-
-  if (!usuarioActual) { setMsg('Inicia sesión primero.', 'error'); return; }
-
-  // 🛡️ Validación con Firebase (fuente de verdad)
   const permitido = await verificarAccesoBeatsFirestore(usuarioActual.uid);
   if (!permitido) {
-    setMsg('❌ Necesitas el plan anual de $450 MXN aprobado y vigente.', 'error');
+    setBeatsMsg('❌ Necesitas el plan anual de $450 MXN aprobado y vigente.', 'error');
     return;
   }
 
-  const fd       = new FormData(beatsForm);
-  const creador  = String(fd.get('creador') || '').trim();
-  const titulo   = String(fd.get('titulo')  || '').trim();
-  const audioRaw = String(fd.get('audio')   || '').trim();
-  const imagenRaw= String(fd.get('imagen')  || '').trim();
+  const creador   = (beatCreadorInput?.value || '').trim();
+  const titulo    = (beatTituloInput?.value  || '').trim();
+  const audioRaw  = (beatAudioInput?.value   || '').trim();
+  const imagenRaw = (beatImagenInput?.value  || '').trim();
 
   if (!creador || !titulo || !audioRaw) {
-    setMsg('Completa creador, título y URL de audio.', 'error');
+    setBeatsMsg('Completa creador, título y URL de audio.', 'error');
     return;
   }
   if (!/^https?:\/\//i.test(audioRaw)) {
-    setMsg('La URL de audio debe iniciar con https://', 'error');
+    setBeatsMsg('La URL de audio debe iniciar con https://', 'error');
     return;
   }
   if (imagenRaw && !/^https?:\/\//i.test(imagenRaw)) {
-    setMsg('La URL de imagen debe iniciar con https://', 'error');
+    setBeatsMsg('La URL de imagen debe iniciar con https://', 'error');
     return;
   }
 
-  const btn = beatsForm.querySelector('.pago-submit');
-  const original = btn?.textContent;
-  if (btn) { btn.disabled = true; btn.textContent = 'PUBLICANDO...'; }
-  setMsg('Guardando beat...');
+  const original = beatsSubmitBtn.textContent;
+  beatsSubmitBtn.disabled = true;
+  beatsSubmitBtn.innerHTML = '<span class="loader"></span>Publicando...';
+  setBeatsMsg('Guardando beat...');
 
   try {
     const audioUrl  = dropboxDirecto(audioRaw);
@@ -2113,14 +2153,19 @@ beatsForm?.addEventListener('submit', async (e) => {
       fecha: serverTimestamp()
     });
 
-    setMsg('✅ Beat publicado correctamente.', 'ok');
-    beatsForm.reset();
+    setBeatsMsg('✅ Beat publicado correctamente.', 'ok');
 
-    setTimeout(() => cerrarModalSusc('modal-beats'), 1500);
+    if (beatCreadorInput) beatCreadorInput.value = '';
+    if (beatTituloInput)  beatTituloInput.value  = '';
+    if (beatAudioInput)   beatAudioInput.value   = '';
+    if (beatImagenInput)  beatImagenInput.value  = '';
   } catch (err) {
     console.error('[beats] error:', err);
-    setMsg('Error: ' + err.message, 'error');
+    setBeatsMsg('Error: ' + err.message, 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = original || 'PUBLICAR BEAT'; }
+    beatsSubmitBtn.disabled = false;
+    beatsSubmitBtn.textContent = original || '🥁 Publicar Beat';
   }
-});
+}
+
+beatsSubmitBtn?.addEventListener('click', publicarBeat);
