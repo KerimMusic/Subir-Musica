@@ -296,7 +296,6 @@ onAuthStateChanged(auth, (user) => {
     cerrarEditModal();
     cerrarStatsModal();
 
-    /* Resetear modo a single al cerrar sesión */
     modoSubida = 'single';
     singleModeWrap?.classList.remove('hidden');
     albumModeWrap?.classList.add('hidden');
@@ -510,7 +509,6 @@ async function eliminarCancion(id, boton, titulo, cancion) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // 🔀 Intercepta modos que no son "single"
   if (modoSubida === 'album') { subirAlbum(); return; }
   if (modoSubida === 'beats') { publicarBeat(); return; }
 
@@ -1797,7 +1795,6 @@ document.getElementById('tutorialBtn')?.addEventListener('click', () => {
 
 let modoSubida = 'single';
 
-/* 🎯 Excluimos #beatsBtn porque comparte la clase .mode-btn pero NO es un modo single/album */
 const uploadModeBtns = document.querySelectorAll('#uploadMode .mode-btn:not(#beatsBtn)');
 const singleModeWrap = document.getElementById('singleModeWrap');
 const albumModeWrap  = document.getElementById('albumModeWrap');
@@ -1834,10 +1831,6 @@ uploadModeBtns.forEach(btn => {
     beatsModeWrap?.classList.add('hidden');
   });
 });
-
-/* ═══════════════════════════════════════════════════════════════
-   💿 MODO ÁLBUM
-   ═══════════════════════════════════════════════════════════════ */
 
 function crearFilaAlbum(num) {
   const wrap = document.createElement('div');
@@ -1992,10 +1985,6 @@ renderAlbumSongs(1);
    🥁 SUBIR BEATS — Solo plan anual $450 MXN aprobado y vigente
    ═══════════════════════════════════════════════════════════════ */
 
-/**
- * Valida el documento de suscripción en Firestore (fuente de verdad).
- * Devuelve true solo si: plan === omega450, estado aprobado/activa y no vencido.
- */
 async function verificarAccesoBeatsFirestore(uid) {
   if (!uid) return false;
   try {
@@ -2019,7 +2008,6 @@ async function verificarAccesoBeatsFirestore(uid) {
   }
 }
 
-/** Muestra u oculta el botón de beats según el estado del doc. */
 function aplicarVisibilidadBotonBeats(datos) {
   if (!beatsBtn) return;
 
@@ -2036,7 +2024,6 @@ function aplicarVisibilidadBotonBeats(datos) {
 
   beatsBtn.classList.toggle('hidden', !ok);
 
-  /* Si estaba en modo beats y pierde acceso, volvemos a single */
   if (!ok && modoSubida === 'beats') {
     modoSubida = 'single';
     beatsBtn.classList.remove('active');
@@ -2046,7 +2033,6 @@ function aplicarVisibilidadBotonBeats(datos) {
   }
 }
 
-/* Listener propio — no interfiere con escucharSuscripcion existente */
 onAuthStateChanged(auth, (user) => {
   if (unsubscribeBeatsSusc) {
     unsubscribeBeatsSusc();
@@ -2068,7 +2054,6 @@ onAuthStateChanged(auth, (user) => {
   );
 });
 
-/* 🥁 Cambiar la vista al modo "beats" (sin modal) */
 beatsBtn?.addEventListener('click', async () => {
   if (!usuarioActual) {
     mostrarStatus('Debes iniciar sesión primero', 'error');
@@ -2091,7 +2076,6 @@ beatsBtn?.addEventListener('click', async () => {
   beatsModeWrap?.classList.remove('hidden');
 });
 
-/* 🥁 Publicar beat — MISMO FLUJO que subir canción individual */
 async function publicarBeat() {
   if (!usuarioActual) { mostrarStatus('Debes iniciar sesión primero', 'error'); return; }
 
@@ -2101,7 +2085,6 @@ async function publicarBeat() {
     return;
   }
 
-  // 🛡️ Validación extra: plan anual $450
   const permitido = await verificarAccesoBeatsFirestore(usuarioActual.uid);
   if (!permitido) {
     mostrarStatus('Esta función solo está disponible con el plan anual de $450 MXN activo.', 'error');
