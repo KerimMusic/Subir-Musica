@@ -1811,7 +1811,6 @@ const albumSubmitBtn = document.getElementById('albumSubmitBtn');
 /* 🥁 Referencias de Beats */
 const beatsBtn         = document.getElementById('beatsBtn');
 const beatsSubmitBtn   = document.getElementById('beatsSubmitBtn');
-const beatsMsg         = document.getElementById('beatsMsg');
 const beatCreadorInput = document.getElementById('beatCreador');
 const beatTituloInput  = document.getElementById('beatTitulo');
 const beatAudioInput   = document.getElementById('beatAudio');
@@ -2047,16 +2046,6 @@ function aplicarVisibilidadBotonBeats(datos) {
   }
 }
 
-function setBeatsMsg(txt = '', tipo = '') {
-  if (!beatsMsg) return;
-  beatsMsg.className = 'hint';
-  beatsMsg.style.color = tipo === 'error' ? '#cc0000' : tipo === 'ok' ? '#0a7d3a' : '#555';
-  beatsMsg.style.textAlign = 'center';
-  beatsMsg.style.minHeight = '18px';
-  beatsMsg.style.marginTop = '12px';
-  beatsMsg.textContent = txt;
-}
-
 /* Listener propio — no interfiere con escucharSuscripcion existente */
 onAuthStateChanged(auth, (user) => {
   if (unsubscribeBeatsSusc) {
@@ -2100,17 +2089,22 @@ beatsBtn?.addEventListener('click', async () => {
   singleModeWrap?.classList.add('hidden');
   albumModeWrap?.classList.add('hidden');
   beatsModeWrap?.classList.remove('hidden');
-
-  setBeatsMsg('');
 });
 
-/* 🥁 Publicar beat */
+/* 🥁 Publicar beat — MISMO FLUJO que subir canción individual */
 async function publicarBeat() {
-  if (!usuarioActual) { setBeatsMsg('Inicia sesión primero.', 'error'); return; }
+  if (!usuarioActual) { mostrarStatus('Debes iniciar sesión primero', 'error'); return; }
 
+  if (!window.tieneAccesoVigente()) {
+    mostrarStatus('Necesitas una suscripción activa para subir música.', 'error');
+    abrirModalSusc('modal-susc');
+    return;
+  }
+
+  // 🛡️ Validación extra: plan anual $450
   const permitido = await verificarAccesoBeatsFirestore(usuarioActual.uid);
   if (!permitido) {
-    setBeatsMsg('❌ Necesitas el plan anual de $450 MXN aprobado y vigente.', 'error');
+    mostrarStatus('Esta función solo está disponible con el plan anual de $450 MXN activo.', 'error');
     return;
   }
 
@@ -2120,52 +2114,51 @@ async function publicarBeat() {
   const imagenRaw = (beatImagenInput?.value  || '').trim();
 
   if (!creador || !titulo || !audioRaw) {
-    setBeatsMsg('Completa creador, título y URL de audio.', 'error');
-    return;
-  }
-  if (!/^https?:\/\//i.test(audioRaw)) {
-    setBeatsMsg('La URL de audio debe iniciar con https://', 'error');
-    return;
-  }
-  if (imagenRaw && !/^https?:\/\//i.test(imagenRaw)) {
-    setBeatsMsg('La URL de imagen debe iniciar con https://', 'error');
+    mostrarStatus('Completa creador, título y audio', 'error');
     return;
   }
 
-  const original = beatsSubmitBtn.textContent;
+  const audioUrl  = dropboxDirecto(audioRaw);
+  const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
+
   beatsSubmitBtn.disabled = true;
-  beatsSubmitBtn.innerHTML = '<span class="loader"></span>Publicando...';
-  setBeatsMsg('Guardando beat...');
+  beatsSubmitBtn.innerHTML = '<span class="loader"></span>Verificando audio...';
+  mostrarStatus('Verificando audio de Dropbox...', 'loading');
 
   try {
-    const audioUrl  = dropboxDirecto(audioRaw);
-    const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
+    const res = await fetch(audioUrl, { method: 'HEAD' });
+    if (!res.ok) throw new Error('Audio no responde');
+  } catch (err) { console.warn('Validación audio:', err); }
+
+  try {
+    beatsSubmitBtn.innerHTML = '<span class="loader"></span>Guardando...';
+    const uid = usuarioActual.uid;
 
     await addDoc(collection(db, 'beats'), {
       creador,
       titulo,
       audioUrl,
       imagenUrl,
-      tipo:  'beat',
-      uid:   usuarioActual.uid,
-      email: usuarioActual.email || '',
-      plan:  PLAN_REQUERIDO_BEATS,
+      tipo: 'beat',
+      uid,
+      email: usuarioActual.email,
+      plan: PLAN_REQUERIDO_BEATS,
       fecha: serverTimestamp()
     });
 
-    setBeatsMsg('✅ Beat publicado correctamente.', 'ok');
+    mostrarStatus('✅ Beat subido correctamente', 'ok');
 
     if (beatCreadorInput) beatCreadorInput.value = '';
     if (beatTituloInput)  beatTituloInput.value  = '';
     if (beatAudioInput)   beatAudioInput.value   = '';
     if (beatImagenInput)  beatImagenInput.value  = '';
+
+    beatsSubmitBtn.disabled = false;
+    beatsSubmitBtn.textContent = 'Subir Beat';
   } catch (err) {
     console.error('[beats] error:', err);
-    setBeatsMsg('Error: ' + err.message, 'error');
-  } finally {
+    mostrarStatus('Error al guardar: ' + err.message, 'error');
     beatsSubmitBtn.disabled = false;
-    beatsSubmitBtn.textContent = original || '🥁 Publicar Beat';
+    beatsSubmitBtn.textContent = 'Subir Beat';
   }
 }
-
-beatsSubmitBtn?.addEventListener('click', publicarBeat);
