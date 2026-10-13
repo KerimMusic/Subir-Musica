@@ -64,7 +64,7 @@
           <button type="button" class="mode-btn active" data-mode="single">🎵 Canción individual</button>
           <button type="button" class="mode-btn" data-mode="album">💿 Álbum completo</button>
         </div>
-        <button id="beatsBtn" class="mode-btn hidden" type="button" style="margin-top:8px;">
+        <button id="beatsBtn" class="mode-btn hidden" type="button" style="margin-top:8px;width:100%;">
           🥁 Subir Beats <small style="opacity:.75;font-weight:600;">· exclusivo plan anual $450</small>
         </button>
         <p class="hint">La opción de beats solo aparece si tienes el plan anual de $450 MXN activo y aprobado.</p>
@@ -180,6 +180,32 @@
         <button type="button" id="albumSubmitBtn" class="album-submit-btn">
           Subir álbum completo
         </button>
+      </div>
+
+      <!-- ═══ MODO 3: SUBIR BEATS ═══ -->
+      <div id="beatsModeWrap" class="hidden">
+        <div class="form-group">
+          <label for="beatCreador">1. Nombre del creador</label>
+          <input type="text" id="beatCreador" placeholder="Ej: DJ Producer">
+        </div>
+        <div class="form-group">
+          <label for="beatTitulo">2. Título del beat</label>
+          <input type="text" id="beatTitulo" placeholder="Ej: Trap Beat #1">
+        </div>
+        <div class="form-group">
+          <label for="beatAudio">3. URL del audio (Dropbox)</label>
+          <input type="url" id="beatAudio" placeholder="https://www.dropbox.com/s/.../beat.mp3?dl=0">
+          <p class="hint">Pega el link normal de Dropbox. Se convertirá automáticamente.</p>
+        </div>
+        <div class="form-group">
+          <label for="beatImagen">4. URL de la imagen de portada (Dropbox)</label>
+          <input type="url" id="beatImagen" placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
+          <p class="hint">Opcional. Si lo dejas vacío se usará una imagen por defecto.</p>
+        </div>
+        <button type="button" id="beatsSubmitBtn" class="album-submit-btn">
+          🥁 Publicar Beat
+        </button>
+        <p id="beatsMsg" class="hint" style="margin-top:12px;text-align:center;min-height:18px;"></p>
       </div>
 
     </form>
@@ -484,42 +510,6 @@
       <div class="tutorial-final">
         🎉 <strong>¡Listo! Tu música quedará publicada en OmegaBeats.</strong>
       </div>
-    </div>
-  </div>
-
-  <!-- 🥁 MODAL: SUBIR BEATS (solo plan anual $450 MXN aprobado) -->
-  <div id="modal-beats" class="pago-overlay hidden">
-    <button class="pago-x" data-close="modal-beats">✕</button>
-    <div class="pago-wrap">
-      <h1 class="pago-title">🥁 Subir Beat</h1>
-
-      <div class="pago-info">
-        <p>Publica tu beat en <strong>OmegaBeats</strong>.</p>
-        <p class="pago-warn"><strong>Exclusivo:</strong> esta función está disponible únicamente para usuarios con la <strong>suscripción anual de $450 MXN activa y aprobada</strong>.</p>
-      </div>
-
-      <form id="beatsForm" class="pago-form">
-        <h2>🎧 Datos del beat</h2>
-
-        <label>Nombre del creador
-          <input type="text" name="creador" required placeholder="Ej: DJ Producer">
-        </label>
-
-        <label>Título del beat
-          <input type="text" name="titulo" required placeholder="Ej: Trap Beat #1">
-        </label>
-
-        <label>URL del audio (Dropbox)
-          <input type="url" name="audio" required placeholder="https://www.dropbox.com/s/.../beat.mp3?dl=0">
-        </label>
-
-        <label>URL de la imagen de portada (Dropbox)
-          <input type="url" name="imagen" placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
-        </label>
-
-        <button type="submit" class="pago-submit">PUBLICAR BEAT</button>
-        <p id="beatsMsg" class="pago-msg"></p>
-      </form>
     </div>
   </div>
 
