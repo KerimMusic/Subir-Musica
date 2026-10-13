@@ -1983,6 +1983,8 @@ renderAlbumSongs(1);
 
 /* ═══════════════════════════════════════════════════════════════
    🥁 SUBIR BEATS — Solo plan anual $450 MXN aprobado y vigente
+   Se guarda en la MISMA colección que las canciones:
+   historial_usuarios/{uid}/canciones
    ═══════════════════════════════════════════════════════════════ */
 
 async function verificarAccesoBeatsFirestore(uid) {
@@ -2117,17 +2119,24 @@ async function publicarBeat() {
     beatsSubmitBtn.innerHTML = '<span class="loader"></span>Guardando...';
     const uid = usuarioActual.uid;
 
-    await addDoc(collection(db, 'beats'), {
-      creador,
+    // ✅ Se guarda en la MISMA colección que las canciones
+    await addDoc(collection(db, 'historial_usuarios', uid, 'canciones'), {
+      artista: creador,
       titulo,
+      album: '',
+      genero: '',
+      subgenero: '',
+      colaboradores: [],
       audioUrl,
       imagenUrl,
-      tipo: 'beat',
+      origen: 'dropbox',
+      esBeat: true,
       uid,
       email: usuarioActual.email,
-      plan: PLAN_REQUERIDO_BEATS,
       fecha: serverTimestamp()
     });
+
+    await asegurarRegistroOyentes(titulo);
 
     mostrarStatus('✅ Beat subido correctamente', 'ok');
 
