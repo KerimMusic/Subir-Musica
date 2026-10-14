@@ -333,7 +333,7 @@ onAuthStateChanged(auth, (user) => {
     singleModeWrap?.classList.remove('hidden');
     albumModeWrap?.classList.add('hidden');
     beatsModeWrap?.classList.add('hidden');
-    podcastModeWrap?.classList.add('hidden'); // 🆕
+    podcastModeWrap?.classList.add('hidden');
     beatsBtn?.classList.add('hidden');
     beatsBtn?.classList.remove('active');
     uploadModeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === 'single'));
@@ -545,7 +545,7 @@ form.addEventListener('submit', async (e) => {
 
   if (modoSubida === 'album')   { subirAlbum(); return; }
   if (modoSubida === 'beats')   { publicarBeat(); return; }
-  if (modoSubida === 'podcast') { publicarPodcast(); return; } // 🆕
+  if (modoSubida === 'podcast') { publicarPodcast(); return; }
 
   if (!usuarioActual) { mostrarStatus('Debes iniciar sesión primero', 'error'); return; }
 
@@ -1123,20 +1123,19 @@ document.getElementById('formCancion').addEventListener('reset', () => {
   cargarColaboradoresEn(collabContainerForm, []);
 
   // 🆕 Reset del podcast
-  if (podcastNombreInput)  podcastNombreInput.value  = '';
-  if (podcastTituloInput)  podcastTituloInput.value  = '';
-  if (podcastAudioInput)   podcastAudioInput.value   = '';
-  if (podcastImagenInput)  podcastImagenInput.value  = '';
-  if (podcastDiaInput)     podcastDiaInput.value     = '';
-  if (podcastFechaInput)   podcastFechaInput.value   = '';
-  if (podcastHoraInicio)   podcastHoraInicio.value   = '';
-  if (podcastHoraFin)      podcastHoraFin.value      = '';
-  if (podcastCoverPreview) podcastCoverPreview.src   = PLACEHOLDER;
+  if (podcastNombreInput)        podcastNombreInput.value        = '';
+  if (podcastTituloInput)        podcastTituloInput.value        = '';
+  if (podcastAudioInput)         podcastAudioInput.value         = '';
+  if (podcastImagenInput)        podcastImagenInput.value        = '';
+  if (podcastDiaInput)           podcastDiaInput.value           = '';
+  if (podcastRepeticionesInput)  podcastRepeticionesInput.value  = 1;
+  if (podcastCoverPreview)       podcastCoverPreview.src         = PLACEHOLDER;
   if (podcastAudioInfo) {
     podcastAudioInfo.className = 'podcast-info';
     podcastAudioInfo.textContent = 'Esperando enlace de audio…';
   }
   duracionPodcastSeg = 0;
+  renderRepeticionesPodcast(1);
 });
 
 pintarGeneros('');
@@ -1873,18 +1872,17 @@ const PLAN_REQUERIDO_BEATS = 'omega450';
 let unsubscribeBeatsSusc = null;
 
 /* 🎙️ Referencias de Podcast */
-const podcastModeWrap     = document.getElementById('podcastModeWrap');
-const podcastSubmitBtn    = document.getElementById('podcastSubmitBtn');
-const podcastNombreInput  = document.getElementById('podcastNombre');
-const podcastTituloInput  = document.getElementById('podcastTitulo');
-const podcastAudioInput   = document.getElementById('podcastAudio');
-const podcastImagenInput  = document.getElementById('podcastImagen');
-const podcastAudioInfo    = document.getElementById('podcastAudioInfo');
-const podcastCoverPreview = document.getElementById('podcastCoverPreview');
-const podcastDiaInput     = document.getElementById('podcastDia');
-const podcastFechaInput   = document.getElementById('podcastFecha');
-const podcastHoraInicio   = document.getElementById('podcastHoraInicio');
-const podcastHoraFin      = document.getElementById('podcastHoraFin');
+const podcastModeWrap           = document.getElementById('podcastModeWrap');
+const podcastSubmitBtn          = document.getElementById('podcastSubmitBtn');
+const podcastNombreInput        = document.getElementById('podcastNombre');
+const podcastTituloInput        = document.getElementById('podcastTitulo');
+const podcastAudioInput         = document.getElementById('podcastAudio');
+const podcastImagenInput        = document.getElementById('podcastImagen');
+const podcastAudioInfo          = document.getElementById('podcastAudioInfo');
+const podcastCoverPreview       = document.getElementById('podcastCoverPreview');
+const podcastDiaInput           = document.getElementById('podcastDia');
+const podcastRepeticionesInput  = document.getElementById('podcastRepeticiones');
+const podcastRepeticionesCont   = document.getElementById('podcastRepeticionesContainer');
 
 let duracionPodcastSeg = 0;
 let detectandoAudio = false;
@@ -1902,7 +1900,7 @@ uploadModeBtns.forEach(btn => {
     singleModeWrap?.classList.toggle('hidden', modo !== 'single');
     albumModeWrap?.classList.toggle('hidden', modo !== 'album');
     beatsModeWrap?.classList.add('hidden');
-    podcastModeWrap?.classList.toggle('hidden', modo !== 'podcast'); // 🆕
+    podcastModeWrap?.classList.toggle('hidden', modo !== 'podcast');
   });
 });
 
@@ -2148,7 +2146,7 @@ beatsBtn?.addEventListener('click', async () => {
   singleModeWrap?.classList.add('hidden');
   albumModeWrap?.classList.add('hidden');
   beatsModeWrap?.classList.remove('hidden');
-  podcastModeWrap?.classList.add('hidden'); // 🆕
+  podcastModeWrap?.classList.add('hidden');
 });
 
 async function publicarBeat() {
@@ -2308,27 +2306,38 @@ function fmtDuracionPodcast(seg) {
   return `${m}m ${String(s).padStart(2,'0')}s`;
 }
 
-/** Calcula la hora de término automática (HH:MM) */
-function calcularHoraFin(horaInicio, duracionSeg) {
-  if (!horaInicio || !duracionSeg || duracionSeg <= 0) return '';
-  const [h, m] = horaInicio.split(':').map(Number);
-  if (isNaN(h) || isNaN(m)) return '';
-  const totalMin = h * 60 + m + Math.ceil(duracionSeg / 60);
-  const hf = Math.floor(totalMin / 60) % 24;
-  const mf = totalMin % 60;
-  return String(hf).padStart(2, '0') + ':' + String(mf).padStart(2, '0');
+/* ─── Render dinámico de repeticiones ─── */
+function renderRepeticionesPodcast(cantidad) {
+  if (!podcastRepeticionesCont) return;
+  const n = Math.max(1, Math.min(20, parseInt(cantidad, 10) || 1));
+
+  // Guardar valores actuales para no perderlos al re-renderizar
+  const valoresActuales = Array.from(
+    podcastRepeticionesCont.querySelectorAll('.podcast-hora-inicio')
+  ).map(i => i.value);
+
+  podcastRepeticionesCont.innerHTML = '';
+
+  for (let i = 0; i < n; i++) {
+    const row = document.createElement('div');
+    row.className = 'podcast-repeticion-row';
+    row.innerHTML = `
+      <label class="podcast-repeticion-label">Repetición ${i + 1}</label>
+      <input type="time" class="podcast-hora-inicio" data-index="${i}" value="${valoresActuales[i] || ''}">
+    `;
+    podcastRepeticionesCont.appendChild(row);
+  }
 }
 
-/** Actualiza la hora de fin cuando cambia horaInicio o la duración */
-function refrescarHoraFinPodcast() {
-  if (!podcastHoraFin) return;
-  const hora = podcastHoraInicio?.value || '';
-  if (!hora || !duracionPodcastSeg) {
-    podcastHoraFin.value = '';
-    return;
-  }
-  podcastHoraFin.value = calcularHoraFin(hora, duracionPodcastSeg);
-}
+podcastRepeticionesInput?.addEventListener('input', (e) => {
+  let n = parseInt(e.target.value, 10);
+  if (isNaN(n) || n < 1) n = 1;
+  if (n > 20) { n = 20; e.target.value = 20; }
+  renderRepeticionesPodcast(n);
+});
+
+/* Inicializar con 1 repetición */
+renderRepeticionesPodcast(1);
 
 /* ─── Cuando el usuario pega la URL del audio ─── */
 let podcastAudioTimeout = null;
@@ -2337,7 +2346,6 @@ podcastAudioInput?.addEventListener('input', () => {
   const raw = podcastAudioInput.value.trim();
 
   duracionPodcastSeg = 0;
-  refrescarHoraFinPodcast();
 
   if (!raw) {
     if (podcastAudioInfo) {
@@ -2362,23 +2370,17 @@ podcastAudioInput?.addEventListener('input', () => {
         podcastAudioInfo.className = 'podcast-info ok';
         podcastAudioInfo.textContent = '✅ Duración detectada: ' + fmtDuracionPodcast(dur);
       }
-      refrescarHoraFinPodcast();
     } catch (e) {
       duracionPodcastSeg = 0;
       if (podcastAudioInfo) {
         podcastAudioInfo.className = 'podcast-info err';
         podcastAudioInfo.textContent = '⚠️ No se pudo obtener la duración. Verifica el enlace de Dropbox.';
       }
-      refrescarHoraFinPodcast();
     } finally {
       detectandoAudio = false;
     }
   }, 700);
 });
-
-/* ─── Hora inicio cambia → recalcular hora fin ─── */
-podcastHoraInicio?.addEventListener('input', refrescarHoraFinPodcast);
-podcastHoraInicio?.addEventListener('change', refrescarHoraFinPodcast);
 
 /* ─── Preview de la portada ─── */
 podcastImagenInput?.addEventListener('input', () => {
@@ -2404,14 +2406,15 @@ async function publicarPodcast() {
     return;
   }
 
-  const nombre   = (podcastNombreInput?.value || '').trim();
-  const titulo   = (podcastTituloInput?.value || '').trim();
-  const audioRaw = (podcastAudioInput?.value || '').trim();
-  const imagenRaw= (podcastImagenInput?.value || '').trim();
-  const dia      = (podcastDiaInput?.value || '').trim();
-  const fecha    = (podcastFechaInput?.value || '').trim();
-  const horaIni  = (podcastHoraInicio?.value || '').trim();
-  const horaFin  = (podcastHoraFin?.value || '').trim();
+  const nombre    = (podcastNombreInput?.value || '').trim();
+  const titulo    = (podcastTituloInput?.value || '').trim();
+  const audioRaw  = (podcastAudioInput?.value  || '').trim();
+  const imagenRaw = (podcastImagenInput?.value || '').trim();
+  const dia       = (podcastDiaInput?.value    || '').trim();
+
+  const horasInicio = Array.from(
+    podcastRepeticionesCont?.querySelectorAll('.podcast-hora-inicio') || []
+  ).map(inp => inp.value.trim());
 
   /* Validaciones */
   if (!nombre)   { mostrarStatus('Escribe el nombre del programa.', 'error'); podcastNombreInput?.focus(); return; }
@@ -2422,9 +2425,20 @@ async function publicarPodcast() {
     return;
   }
   if (!dia)      { mostrarStatus('Selecciona el día de transmisión.', 'error'); podcastDiaInput?.focus(); return; }
-  if (!fecha)    { mostrarStatus('Selecciona la fecha de transmisión.', 'error'); podcastFechaInput?.focus(); return; }
-  if (!horaIni)  { mostrarStatus('Selecciona la hora de inicio.', 'error'); podcastHoraInicio?.focus(); return; }
-  if (!horaFin)  { mostrarStatus('No se pudo calcular la hora de término.', 'error'); return; }
+
+  if (!horasInicio.length) {
+    mostrarStatus('Agrega al menos una repetición.', 'error');
+    return;
+  }
+
+  for (let i = 0; i < horasInicio.length; i++) {
+    if (!horasInicio[i]) {
+      mostrarStatus(`Falta la hora de inicio de la repetición ${i + 1}.`, 'error');
+      const inputFaltante = podcastRepeticionesCont?.querySelectorAll('.podcast-hora-inicio')[i];
+      inputFaltante?.focus();
+      return;
+    }
+  }
 
   const audioUrl  = dropboxDirecto(audioRaw);
   const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
@@ -2444,12 +2458,14 @@ async function publicarPodcast() {
       colaboradores: [],
       audioUrl,
       imagenUrl,
+      // 📅 Programación
       podcastDia: dia,
-      podcastFecha: fecha,
-      podcastHoraInicio: horaIni,
-      podcastHoraFin: horaFin,
+      podcastRepeticiones: horasInicio.length,
+      podcastHorasInicio: horasInicio,
+      // ⏱ Duración detectada (informativa)
       podcastDuracionSeg: Math.round(duracionPodcastSeg),
       podcastDuracionTxt: fmtDuracionPodcast(duracionPodcastSeg),
+      // 🔖 Identificadores
       esPodcast: true,
       origen: 'dropbox',
       uid,
@@ -2461,20 +2477,20 @@ async function publicarPodcast() {
 
     mostrarStatus('✅ Podcast publicado correctamente', 'ok');
 
-    if (podcastNombreInput)   podcastNombreInput.value   = '';
-    if (podcastTituloInput)   podcastTituloInput.value   = '';
-    if (podcastAudioInput)    podcastAudioInput.value    = '';
-    if (podcastImagenInput)   podcastImagenInput.value   = '';
-    if (podcastDiaInput)      podcastDiaInput.value      = '';
-    if (podcastFechaInput)    podcastFechaInput.value    = '';
-    if (podcastHoraInicio)    podcastHoraInicio.value    = '';
-    if (podcastHoraFin)       podcastHoraFin.value       = '';
-    if (podcastCoverPreview)  podcastCoverPreview.src    = PLACEHOLDER;
+    // Reset
+    if (podcastNombreInput)       podcastNombreInput.value       = '';
+    if (podcastTituloInput)       podcastTituloInput.value       = '';
+    if (podcastAudioInput)        podcastAudioInput.value        = '';
+    if (podcastImagenInput)       podcastImagenInput.value       = '';
+    if (podcastDiaInput)          podcastDiaInput.value          = '';
+    if (podcastRepeticionesInput) podcastRepeticionesInput.value = 1;
+    if (podcastCoverPreview)      podcastCoverPreview.src        = PLACEHOLDER;
     if (podcastAudioInfo) {
       podcastAudioInfo.className = 'podcast-info';
       podcastAudioInfo.textContent = 'Esperando enlace de audio…';
     }
     duracionPodcastSeg = 0;
+    renderRepeticionesPodcast(1);
 
   } catch (err) {
     console.error('[podcast] error:', err);
