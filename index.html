@@ -288,19 +288,14 @@
         </div>
 
         <div class="form-group">
-          <label for="podcastFecha">6. Fecha</label>
-          <input type="date" id="podcastFecha">
+          <label for="podcastRepeticiones">6. ¿Cuántas veces se repite?</label>
+          <input type="number" id="podcastRepeticiones" min="1" max="20" value="1" step="1">
+          <p class="hint">Indica cuántas veces se transmitirá este podcast.</p>
         </div>
 
         <div class="form-group">
-          <label for="podcastHoraInicio">7. Hora de inicio</label>
-          <input type="time" id="podcastHoraInicio">
-        </div>
-
-        <div class="form-group">
-          <label for="podcastHoraFin">8. Hora de término (automática)</label>
-          <input type="time" id="podcastHoraFin" readonly placeholder="--:--">
-          <p class="hint">Se calcula automáticamente según la duración del audio. No editable.</p>
+          <label>7. Horas de inicio de cada repetición</label>
+          <div id="podcastRepeticionesContainer" class="podcast-repeticiones"></div>
         </div>
 
         <button type="submit" id="podcastSubmitBtn">Publicar Podcast</button>
