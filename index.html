@@ -63,6 +63,8 @@
         <div class="upload-mode" id="uploadMode">
           <button type="button" class="mode-btn active" data-mode="single">🎵 Canción individual</button>
           <button type="button" class="mode-btn" data-mode="album">💿 Álbum completo</button>
+          <!-- 🆕 NUEVA OPCIÓN: PROGRAMA DE PODCAST -->
+          <button type="button" class="mode-btn" data-mode="podcast">🎙️ Programa de Podcast</button>
         </div>
         <button id="beatsBtn" class="mode-btn hidden" type="button" style="margin-top:8px;width:100%;">
           🥁 Subir Beats <small style="opacity:.75;font-weight:600;">· exclusivo plan anual $450</small>
@@ -230,6 +232,78 @@
           <p class="hint">Marca esta opción si quieres que los compradores puedan negociar o pedir una cotización personalizada por WhatsApp o Telegram.</p>
         </div>
         <button type="submit" id="beatsSubmitBtn">Subir Beat</button>
+      </div>
+
+      <!-- ═══ MODO 4: PROGRAMA DE PODCAST 🆕 ═══ -->
+      <div id="podcastModeWrap" class="hidden">
+
+        <div class="form-group">
+          <label for="podcastNombre">1. Nombre del programa</label>
+          <input type="text" id="podcastNombre" placeholder="Ej: Voces Nocturnas">
+          <p class="hint">Nombre general del podcast.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="podcastTitulo">2. Título del programa</label>
+          <input type="text" id="podcastTitulo" placeholder="Ej: Episodio 1 - Introducción">
+          <p class="hint">Título del episodio que se va a transmitir.</p>
+        </div>
+
+        <div class="form-group">
+          <label for="podcastAudio">3. URL de audio de Dropbox</label>
+          <input type="url" id="podcastAudio" placeholder="https://www.dropbox.com/s/.../episodio.mp3?dl=0">
+          <p class="hint">Pega el link normal de Dropbox. Se convertirá automáticamente.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Audio</label>
+          <div id="podcastAudioInfo" class="podcast-info">Esperando enlace de audio…</div>
+        </div>
+
+        <div class="form-group">
+          <label for="podcastImagen">4. URL de imagen de Dropbox</label>
+          <input type="url" id="podcastImagen" placeholder="https://www.dropbox.com/s/.../portada.jpg?dl=0">
+          <p class="hint">Opcional. Si lo dejas vacío se mostrará una imagen por defecto.</p>
+        </div>
+
+        <div class="form-group">
+          <label>Portada</label>
+          <div class="podcast-cover-wrap">
+            <img id="podcastCoverPreview" src="" alt="Portada del podcast">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="podcastDia">5. Día</label>
+          <select id="podcastDia">
+            <option value="">Selecciona un día</option>
+            <option value="Lunes">Lunes</option>
+            <option value="Martes">Martes</option>
+            <option value="Miércoles">Miércoles</option>
+            <option value="Jueves">Jueves</option>
+            <option value="Viernes">Viernes</option>
+            <option value="Sábado">Sábado</option>
+            <option value="Domingo">Domingo</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="podcastFecha">6. Fecha</label>
+          <input type="date" id="podcastFecha">
+        </div>
+
+        <div class="form-group">
+          <label for="podcastHoraInicio">7. Hora de inicio</label>
+          <input type="time" id="podcastHoraInicio">
+        </div>
+
+        <div class="form-group">
+          <label for="podcastHoraFin">8. Hora de término (automática)</label>
+          <input type="time" id="podcastHoraFin" readonly placeholder="--:--">
+          <p class="hint">Se calcula automáticamente según la duración del audio. No editable.</p>
+        </div>
+
+        <button type="submit" id="podcastSubmitBtn">Publicar Podcast</button>
       </div>
 
     </form>
