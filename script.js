@@ -333,6 +333,7 @@ onAuthStateChanged(auth, (user) => {
     singleModeWrap?.classList.remove('hidden');
     albumModeWrap?.classList.add('hidden');
     beatsModeWrap?.classList.add('hidden');
+    podcastModeWrap?.classList.add('hidden'); // 🆕
     beatsBtn?.classList.add('hidden');
     beatsBtn?.classList.remove('active');
     uploadModeBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === 'single'));
@@ -542,8 +543,9 @@ async function eliminarCancion(id, boton, titulo, cancion) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  if (modoSubida === 'album') { subirAlbum(); return; }
-  if (modoSubida === 'beats') { publicarBeat(); return; }
+  if (modoSubida === 'album')   { subirAlbum(); return; }
+  if (modoSubida === 'beats')   { publicarBeat(); return; }
+  if (modoSubida === 'podcast') { publicarPodcast(); return; } // 🆕
 
   if (!usuarioActual) { mostrarStatus('Debes iniciar sesión primero', 'error'); return; }
 
@@ -1119,6 +1121,22 @@ document.getElementById('formCancion').addEventListener('reset', () => {
   if (subgenreGroup) subgenreGroup.classList.add('hidden');
   cerrarSubgeneros();
   cargarColaboradoresEn(collabContainerForm, []);
+
+  // 🆕 Reset del podcast
+  if (podcastNombreInput)  podcastNombreInput.value  = '';
+  if (podcastTituloInput)  podcastTituloInput.value  = '';
+  if (podcastAudioInput)   podcastAudioInput.value   = '';
+  if (podcastImagenInput)  podcastImagenInput.value  = '';
+  if (podcastDiaInput)     podcastDiaInput.value     = '';
+  if (podcastFechaInput)   podcastFechaInput.value   = '';
+  if (podcastHoraInicio)   podcastHoraInicio.value   = '';
+  if (podcastHoraFin)      podcastHoraFin.value      = '';
+  if (podcastCoverPreview) podcastCoverPreview.src   = PLACEHOLDER;
+  if (podcastAudioInfo) {
+    podcastAudioInfo.className = 'podcast-info';
+    podcastAudioInfo.textContent = 'Esperando enlace de audio…';
+  }
+  duracionPodcastSeg = 0;
 });
 
 pintarGeneros('');
@@ -1823,7 +1841,7 @@ document.getElementById('tutorialBtn')?.addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   💿 SUBIDA DE ÁLBUM COMPLETO + 🥁 SUBIR BEATS
+   💿 SUBIDA DE ÁLBUM COMPLETO + 🥁 SUBIR BEATS + 🎙️ PODCAST
    ═══════════════════════════════════════════════════════════════ */
 
 let modoSubida = 'single';
@@ -1854,7 +1872,24 @@ const PLAN_REQUERIDO_BEATS = 'omega450';
 
 let unsubscribeBeatsSusc = null;
 
-/* ─── Cambio de modo: single / album ─── */
+/* 🎙️ Referencias de Podcast */
+const podcastModeWrap     = document.getElementById('podcastModeWrap');
+const podcastSubmitBtn    = document.getElementById('podcastSubmitBtn');
+const podcastNombreInput  = document.getElementById('podcastNombre');
+const podcastTituloInput  = document.getElementById('podcastTitulo');
+const podcastAudioInput   = document.getElementById('podcastAudio');
+const podcastImagenInput  = document.getElementById('podcastImagen');
+const podcastAudioInfo    = document.getElementById('podcastAudioInfo');
+const podcastCoverPreview = document.getElementById('podcastCoverPreview');
+const podcastDiaInput     = document.getElementById('podcastDia');
+const podcastFechaInput   = document.getElementById('podcastFecha');
+const podcastHoraInicio   = document.getElementById('podcastHoraInicio');
+const podcastHoraFin      = document.getElementById('podcastHoraFin');
+
+let duracionPodcastSeg = 0;
+let detectandoAudio = false;
+
+/* ─── Cambio de modo: single / album / podcast ─── */
 uploadModeBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const modo = btn.dataset.mode;
@@ -1867,6 +1902,7 @@ uploadModeBtns.forEach(btn => {
     singleModeWrap?.classList.toggle('hidden', modo !== 'single');
     albumModeWrap?.classList.toggle('hidden', modo !== 'album');
     beatsModeWrap?.classList.add('hidden');
+    podcastModeWrap?.classList.toggle('hidden', modo !== 'podcast'); // 🆕
   });
 });
 
@@ -2021,8 +2057,6 @@ renderAlbumSongs(1);
 
 /* ═══════════════════════════════════════════════════════════════
    🥁 SUBIR BEATS — Solo plan anual $450 MXN aprobado y vigente
-   Se guarda en la MISMA colección que las canciones:
-   historial_usuarios/{uid}/canciones
    ═══════════════════════════════════════════════════════════════ */
 
 async function verificarAccesoBeatsFirestore(uid) {
@@ -2114,6 +2148,7 @@ beatsBtn?.addEventListener('click', async () => {
   singleModeWrap?.classList.add('hidden');
   albumModeWrap?.classList.add('hidden');
   beatsModeWrap?.classList.remove('hidden');
+  podcastModeWrap?.classList.add('hidden'); // 🆕
 });
 
 async function publicarBeat() {
@@ -2146,11 +2181,9 @@ async function publicarBeat() {
     return;
   }
 
-  // 📞 Normaliza contactos a enlaces válidos (opcional)
   const whatsappUrl = normalizarWhatsApp(whatsappRaw);
   const telegramUrl = normalizarTelegram(telegramRaw);
 
-  // 💰 Convierte los precios a número (o null si está vacío)
   const precioMp3 = precioMp3Raw === '' ? null : Number(precioMp3Raw);
   const precioWav = precioWavRaw === '' ? null : Number(precioWavRaw);
 
@@ -2179,7 +2212,6 @@ async function publicarBeat() {
     beatsSubmitBtn.innerHTML = '<span class="loader"></span>Guardando...';
     const uid = usuarioActual.uid;
 
-    // ✅ Se guarda en la MISMA colección que las canciones
     await addDoc(collection(db, 'historial_usuarios', uid, 'canciones'), {
       artista: creador,
       titulo,
@@ -2224,3 +2256,236 @@ async function publicarBeat() {
     beatsSubmitBtn.textContent = 'Subir Beat';
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   🎙️ PROGRAMA DE PODCAST — Lógica completa
+   ═══════════════════════════════════════════════════════════════ */
+
+/** Detecta la duración de un audio a partir de su URL */
+function detectarDuracionAudio(url) {
+  return new Promise((resolve, reject) => {
+    if (!url) { reject(new Error('URL vacía')); return; }
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    let terminado = false;
+
+    const timeout = setTimeout(() => {
+      if (terminado) return;
+      terminado = true;
+      audio.src = '';
+      reject(new Error('Tiempo de espera agotado'));
+    }, 20000);
+
+    audio.addEventListener('loadedmetadata', () => {
+      if (terminado) return;
+      terminado = true;
+      clearTimeout(timeout);
+      if (isFinite(audio.duration) && audio.duration > 0) {
+        resolve(audio.duration);
+      } else {
+        reject(new Error('Duración no disponible'));
+      }
+    });
+
+    audio.addEventListener('error', () => {
+      if (terminado) return;
+      terminado = true;
+      clearTimeout(timeout);
+      reject(new Error('No se pudo cargar el audio'));
+    });
+
+    audio.src = url;
+  });
+}
+
+/** Formatea segundos a "MMm SSs" o "Hh MMm SSs" */
+function fmtDuracionPodcast(seg) {
+  if (!isFinite(seg) || seg <= 0) return '—';
+  const h = Math.floor(seg / 3600);
+  const m = Math.floor((seg % 3600) / 60);
+  const s = Math.floor(seg % 60);
+  if (h > 0) return `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+  return `${m}m ${String(s).padStart(2,'0')}s`;
+}
+
+/** Calcula la hora de término automática (HH:MM) */
+function calcularHoraFin(horaInicio, duracionSeg) {
+  if (!horaInicio || !duracionSeg || duracionSeg <= 0) return '';
+  const [h, m] = horaInicio.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return '';
+  const totalMin = h * 60 + m + Math.ceil(duracionSeg / 60);
+  const hf = Math.floor(totalMin / 60) % 24;
+  const mf = totalMin % 60;
+  return String(hf).padStart(2, '0') + ':' + String(mf).padStart(2, '0');
+}
+
+/** Actualiza la hora de fin cuando cambia horaInicio o la duración */
+function refrescarHoraFinPodcast() {
+  if (!podcastHoraFin) return;
+  const hora = podcastHoraInicio?.value || '';
+  if (!hora || !duracionPodcastSeg) {
+    podcastHoraFin.value = '';
+    return;
+  }
+  podcastHoraFin.value = calcularHoraFin(hora, duracionPodcastSeg);
+}
+
+/* ─── Cuando el usuario pega la URL del audio ─── */
+let podcastAudioTimeout = null;
+podcastAudioInput?.addEventListener('input', () => {
+  clearTimeout(podcastAudioTimeout);
+  const raw = podcastAudioInput.value.trim();
+
+  duracionPodcastSeg = 0;
+  refrescarHoraFinPodcast();
+
+  if (!raw) {
+    if (podcastAudioInfo) {
+      podcastAudioInfo.className = 'podcast-info';
+      podcastAudioInfo.textContent = 'Esperando enlace de audio…';
+    }
+    return;
+  }
+
+  podcastAudioTimeout = setTimeout(async () => {
+    const urlDirecta = dropboxDirecto(raw);
+    detectandoAudio = true;
+    if (podcastAudioInfo) {
+      podcastAudioInfo.className = 'podcast-info loading';
+      podcastAudioInfo.textContent = '🔎 Detectando duración del audio…';
+    }
+
+    try {
+      const dur = await detectarDuracionAudio(urlDirecta);
+      duracionPodcastSeg = dur;
+      if (podcastAudioInfo) {
+        podcastAudioInfo.className = 'podcast-info ok';
+        podcastAudioInfo.textContent = '✅ Duración detectada: ' + fmtDuracionPodcast(dur);
+      }
+      refrescarHoraFinPodcast();
+    } catch (e) {
+      duracionPodcastSeg = 0;
+      if (podcastAudioInfo) {
+        podcastAudioInfo.className = 'podcast-info err';
+        podcastAudioInfo.textContent = '⚠️ No se pudo obtener la duración. Verifica el enlace de Dropbox.';
+      }
+      refrescarHoraFinPodcast();
+    } finally {
+      detectandoAudio = false;
+    }
+  }, 700);
+});
+
+/* ─── Hora inicio cambia → recalcular hora fin ─── */
+podcastHoraInicio?.addEventListener('input', refrescarHoraFinPodcast);
+podcastHoraInicio?.addEventListener('change', refrescarHoraFinPodcast);
+
+/* ─── Preview de la portada ─── */
+podcastImagenInput?.addEventListener('input', () => {
+  const raw = podcastImagenInput.value.trim();
+  if (!podcastCoverPreview) return;
+  podcastCoverPreview.src = raw ? dropboxDirecto(raw) : PLACEHOLDER;
+  podcastCoverPreview.onerror = () => { podcastCoverPreview.src = PLACEHOLDER; };
+});
+
+/* ─── Publicar Podcast ─── */
+async function publicarPodcast() {
+  if (!usuarioActual) {
+    mostrarStatus('Debes iniciar sesión primero', 'error');
+    return;
+  }
+  if (!window.tieneAccesoVigente()) {
+    mostrarStatus('Necesitas una suscripción activa para publicar.', 'error');
+    abrirModalSusc('modal-susc');
+    return;
+  }
+  if (detectandoAudio) {
+    mostrarStatus('Espera a que se detecte la duración del audio…', 'loading');
+    return;
+  }
+
+  const nombre   = (podcastNombreInput?.value || '').trim();
+  const titulo   = (podcastTituloInput?.value || '').trim();
+  const audioRaw = (podcastAudioInput?.value || '').trim();
+  const imagenRaw= (podcastImagenInput?.value || '').trim();
+  const dia      = (podcastDiaInput?.value || '').trim();
+  const fecha    = (podcastFechaInput?.value || '').trim();
+  const horaIni  = (podcastHoraInicio?.value || '').trim();
+  const horaFin  = (podcastHoraFin?.value || '').trim();
+
+  /* Validaciones */
+  if (!nombre)   { mostrarStatus('Escribe el nombre del programa.', 'error'); podcastNombreInput?.focus(); return; }
+  if (!titulo)   { mostrarStatus('Escribe el título del programa.', 'error'); podcastTituloInput?.focus(); return; }
+  if (!audioRaw) { mostrarStatus('Pega la URL de audio de Dropbox.', 'error'); podcastAudioInput?.focus(); return; }
+  if (!duracionPodcastSeg || duracionPodcastSeg <= 0) {
+    mostrarStatus('No se pudo validar la duración del audio. Revisa el enlace.', 'error');
+    return;
+  }
+  if (!dia)      { mostrarStatus('Selecciona el día de transmisión.', 'error'); podcastDiaInput?.focus(); return; }
+  if (!fecha)    { mostrarStatus('Selecciona la fecha de transmisión.', 'error'); podcastFechaInput?.focus(); return; }
+  if (!horaIni)  { mostrarStatus('Selecciona la hora de inicio.', 'error'); podcastHoraInicio?.focus(); return; }
+  if (!horaFin)  { mostrarStatus('No se pudo calcular la hora de término.', 'error'); return; }
+
+  const audioUrl  = dropboxDirecto(audioRaw);
+  const imagenUrl = imagenRaw ? dropboxDirecto(imagenRaw) : '';
+
+  podcastSubmitBtn.disabled = true;
+  podcastSubmitBtn.innerHTML = '<span class="loader"></span>Publicando...';
+  mostrarStatus('Publicando programa de podcast...', 'loading');
+
+  try {
+    const uid = usuarioActual.uid;
+    await addDoc(collection(db, 'historial_usuarios', uid, 'canciones'), {
+      artista: nombre,
+      titulo,
+      album: nombre,
+      genero: 'Podcast',
+      subgenero: '',
+      colaboradores: [],
+      audioUrl,
+      imagenUrl,
+      podcastDia: dia,
+      podcastFecha: fecha,
+      podcastHoraInicio: horaIni,
+      podcastHoraFin: horaFin,
+      podcastDuracionSeg: Math.round(duracionPodcastSeg),
+      podcastDuracionTxt: fmtDuracionPodcast(duracionPodcastSeg),
+      esPodcast: true,
+      origen: 'dropbox',
+      uid,
+      email: usuarioActual.email,
+      fecha: serverTimestamp()
+    });
+
+    await asegurarRegistroOyentes(titulo);
+
+    mostrarStatus('✅ Podcast publicado correctamente', 'ok');
+
+    if (podcastNombreInput)   podcastNombreInput.value   = '';
+    if (podcastTituloInput)   podcastTituloInput.value   = '';
+    if (podcastAudioInput)    podcastAudioInput.value    = '';
+    if (podcastImagenInput)   podcastImagenInput.value   = '';
+    if (podcastDiaInput)      podcastDiaInput.value      = '';
+    if (podcastFechaInput)    podcastFechaInput.value    = '';
+    if (podcastHoraInicio)    podcastHoraInicio.value    = '';
+    if (podcastHoraFin)       podcastHoraFin.value       = '';
+    if (podcastCoverPreview)  podcastCoverPreview.src    = PLACEHOLDER;
+    if (podcastAudioInfo) {
+      podcastAudioInfo.className = 'podcast-info';
+      podcastAudioInfo.textContent = 'Esperando enlace de audio…';
+    }
+    duracionPodcastSeg = 0;
+
+  } catch (err) {
+    console.error('[podcast] error:', err);
+    mostrarStatus('Error al publicar: ' + err.message, 'error');
+  } finally {
+    podcastSubmitBtn.disabled = false;
+    podcastSubmitBtn.textContent = 'Publicar Podcast';
+  }
+}
+
+podcastSubmitBtn?.addEventListener('click', (e) => {
+  e.preventDefault();
+  publicarPodcast();
+});
