@@ -1128,6 +1128,8 @@ document.getElementById('formCancion').addEventListener('reset', () => {
   if (podcastAudioInput)         podcastAudioInput.value         = '';
   if (podcastImagenInput)        podcastImagenInput.value        = '';
   if (podcastDiaInput)           podcastDiaInput.value           = '';
+  if (podcastMesInput)           podcastMesInput.value           = '';
+  if (podcastAnioInput)          podcastAnioInput.value          = '';
   if (podcastRepeticionesInput)  podcastRepeticionesInput.value  = 1;
   if (podcastCoverPreview)       podcastCoverPreview.src         = PLACEHOLDER;
   if (podcastAudioInfo) {
@@ -1881,6 +1883,8 @@ const podcastImagenInput        = document.getElementById('podcastImagen');
 const podcastAudioInfo          = document.getElementById('podcastAudioInfo');
 const podcastCoverPreview       = document.getElementById('podcastCoverPreview');
 const podcastDiaInput           = document.getElementById('podcastDia');
+const podcastMesInput           = document.getElementById('podcastMes');
+const podcastAnioInput          = document.getElementById('podcastAnio');
 const podcastRepeticionesInput  = document.getElementById('podcastRepeticiones');
 const podcastRepeticionesCont   = document.getElementById('podcastRepeticionesContainer');
 
@@ -2411,6 +2415,8 @@ async function publicarPodcast() {
   const audioRaw  = (podcastAudioInput?.value  || '').trim();
   const imagenRaw = (podcastImagenInput?.value || '').trim();
   const dia       = (podcastDiaInput?.value    || '').trim();
+  const mes       = (podcastMesInput?.value    || '').trim();
+  const anio      = (podcastAnioInput?.value   || '').trim();
 
   const horasInicio = Array.from(
     podcastRepeticionesCont?.querySelectorAll('.podcast-hora-inicio') || []
@@ -2424,7 +2430,29 @@ async function publicarPodcast() {
     mostrarStatus('No se pudo validar la duración del audio. Revisa el enlace.', 'error');
     return;
   }
-  if (!dia)      { mostrarStatus('Selecciona el día de transmisión.', 'error'); podcastDiaInput?.focus(); return; }
+
+  /* 🆕 Validación del día (numérico 1-31) */
+  const diaNum = parseInt(dia, 10);
+  if (!dia || isNaN(diaNum) || diaNum < 1 || diaNum > 31) {
+    mostrarStatus('El día debe ser un número entre 1 y 31.', 'error');
+    podcastDiaInput?.focus();
+    return;
+  }
+
+  /* 🆕 Validación del mes */
+  if (!mes) {
+    mostrarStatus('Selecciona el mes.', 'error');
+    podcastMesInput?.focus();
+    return;
+  }
+
+  /* 🆕 Validación del año */
+  const anioNum = parseInt(anio, 10);
+  if (!anio || isNaN(anioNum) || anioNum < 2024 || anioNum > 2100) {
+    mostrarStatus('El año no es válido (2024 - 2100).', 'error');
+    podcastAnioInput?.focus();
+    return;
+  }
 
   if (!horasInicio.length) {
     mostrarStatus('Agrega al menos una repetición.', 'error');
@@ -2459,7 +2487,9 @@ async function publicarPodcast() {
       audioUrl,
       imagenUrl,
       // 📅 Programación
-      podcastDia: dia,
+      podcastDia: diaNum,
+      podcastMes: mes,
+      podcastAnio: anioNum,
       podcastRepeticiones: horasInicio.length,
       podcastHorasInicio: horasInicio,
       // ⏱ Duración detectada (informativa)
@@ -2483,6 +2513,8 @@ async function publicarPodcast() {
     if (podcastAudioInput)        podcastAudioInput.value        = '';
     if (podcastImagenInput)       podcastImagenInput.value       = '';
     if (podcastDiaInput)          podcastDiaInput.value          = '';
+    if (podcastMesInput)          podcastMesInput.value          = '';
+    if (podcastAnioInput)         podcastAnioInput.value         = '';
     if (podcastRepeticionesInput) podcastRepeticionesInput.value = 1;
     if (podcastCoverPreview)      podcastCoverPreview.src        = PLACEHOLDER;
     if (podcastAudioInfo) {
