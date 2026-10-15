@@ -275,26 +275,42 @@
 
         <div class="form-group">
           <label for="podcastDia">5. Día</label>
-          <select id="podcastDia">
-            <option value="">Selecciona un día</option>
-            <option value="Lunes">Lunes</option>
-            <option value="Martes">Martes</option>
-            <option value="Miércoles">Miércoles</option>
-            <option value="Jueves">Jueves</option>
-            <option value="Viernes">Viernes</option>
-            <option value="Sábado">Sábado</option>
-            <option value="Domingo">Domingo</option>
+          <input type="number" id="podcastDia" min="1" max="31" step="1" placeholder="Ej: 15">
+          <p class="hint">Número del día del mes (1 al 31).</p>
+        </div>
+
+        <div class="form-group">
+          <label for="podcastMes">6. Mes</label>
+          <select id="podcastMes">
+            <option value="">Selecciona un mes</option>
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+            <option value="03">Marzo</option>
+            <option value="04">Abril</option>
+            <option value="05">Mayo</option>
+            <option value="06">Junio</option>
+            <option value="07">Julio</option>
+            <option value="08">Agosto</option>
+            <option value="09">Septiembre</option>
+            <option value="10">Octubre</option>
+            <option value="11">Noviembre</option>
+            <option value="12">Diciembre</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="podcastRepeticiones">6. ¿Cuántas veces se repite?</label>
+          <label for="podcastAnio">7. Año</label>
+          <input type="number" id="podcastAnio" min="2024" max="2100" step="1" placeholder="Ej: 2026">
+        </div>
+
+        <div class="form-group">
+          <label for="podcastRepeticiones">8. ¿Cuántas veces se repite?</label>
           <input type="number" id="podcastRepeticiones" min="1" max="20" value="1" step="1">
           <p class="hint">Indica cuántas veces se transmitirá este podcast.</p>
         </div>
 
         <div class="form-group">
-          <label>7. Horas de inicio de cada repetición</label>
+          <label>9. Horas de inicio de cada repetición</label>
           <div id="podcastRepeticionesContainer" class="podcast-repeticiones"></div>
         </div>
 
