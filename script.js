@@ -1123,7 +1123,7 @@ document.getElementById('formCancion').addEventListener('reset', () => {
   cargarColaboradoresEn(collabContainerForm, []);
 
   // 🆕 Reset del podcast
-  if (podcastNombreInput)        podcastNombreInput.value        = '';
+  if (podcastNombreInput)        podcastNombreInput.value        = 'Podcast o Programa';
   if (podcastTituloInput)        podcastTituloInput.value        = '';
   if (podcastAudioInput)         podcastAudioInput.value         = '';
   if (podcastImagenInput)        podcastImagenInput.value        = '';
@@ -2343,6 +2343,12 @@ podcastRepeticionesInput?.addEventListener('input', (e) => {
 /* Inicializar con 1 repetición */
 renderRepeticionesPodcast(1);
 
+/* 🆕 Al enfocar el campo, si aún tiene el texto por defecto, se selecciona
+   para que el usuario pueda reemplazarlo escribiendo directamente. */
+podcastNombreInput?.addEventListener('focus', function () {
+  if (this.value === 'Podcast o Programa') this.select();
+});
+
 /* ─── Cuando el usuario pega la URL del audio ─── */
 let podcastAudioTimeout = null;
 podcastAudioInput?.addEventListener('input', () => {
@@ -2508,7 +2514,7 @@ async function publicarPodcast() {
     mostrarStatus('✅ Podcast publicado correctamente', 'ok');
 
     // Reset
-    if (podcastNombreInput)       podcastNombreInput.value       = '';
+    if (podcastNombreInput)       podcastNombreInput.value       = 'Podcast o Programa';
     if (podcastTituloInput)       podcastTituloInput.value       = '';
     if (podcastAudioInput)        podcastAudioInput.value        = '';
     if (podcastImagenInput)       podcastImagenInput.value       = '';
