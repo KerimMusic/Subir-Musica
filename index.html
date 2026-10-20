@@ -246,14 +246,15 @@
           <p class="hint">Escribe el nombre de tu podcast o programa. Este campo es obligatorio.</p>
         </div>
 
-        <!-- 🆕 Campo Título readonly — se completa automáticamente con el Nombre -->
+        <!-- 🆕 Campo Tipo de contenido (reemplaza al "Título del programa") -->
         <div class="form-group">
-          <label for="podcastTitulo">2. Título del programa</label>
-          <input type="text" id="podcastTitulo"
-                 placeholder="Podcast o Programa"
-                 value="Podcast o Programa"
-                 readonly>
-          <p class="hint">Se completa automáticamente con el Nombre del programa (no editable).</p>
+          <label for="podcastTipoContenido">2. Tipo de contenido</label>
+          <select id="podcastTipoContenido" required>
+            <option value="">Selecciona el tipo de contenido</option>
+            <option value="Podcast">Podcast</option>
+            <option value="Programa">Programa</option>
+          </select>
+          <p class="hint">Selecciona si es Podcast o Programa. Este campo es obligatorio.</p>
         </div>
 
         <div class="form-group">
