@@ -1891,6 +1891,32 @@ const podcastRepeticionesCont   = document.getElementById('podcastRepeticionesCo
 let duracionPodcastSeg = 0;
 let detectandoAudio = false;
 
+/* 🆕 Aplica el prefijo del tipo de contenido al inicio del nombre del programa.
+   - Si selecciona "Podcast", el nombre debe empezar con "Podcast".
+   - Si selecciona "Programa", el nombre debe empezar con "Programa".
+   - Si ya empieza con esa palabra, no se duplica.
+   - Si no, se agrega automáticamente conservando el resto del texto. */
+function aplicarPrefijoTipoContenido() {
+  if (!podcastNombreInput || !podcastTipoContenidoInput) return;
+
+  const tipo = (podcastTipoContenidoInput.value || '').trim();
+  if (!tipo) return;
+
+  const nombre = (podcastNombreInput.value || '').trim();
+
+  // Si está vacío o sigue con el placeholder, no prefijar
+  if (!nombre || nombre === 'Podcast o Programa') return;
+
+  // Si ya empieza con la palabra del tipo (case-insensitive), no duplicar
+  if (nombre.toLowerCase().startsWith(tipo.toLowerCase())) return;
+
+  // Si no, agregar al inicio conservando el resto del texto
+  podcastNombreInput.value = tipo + ' ' + nombre;
+}
+
+/* 🆕 Aplica el prefijo en cuanto el usuario seleccione el tipo */
+podcastTipoContenidoInput?.addEventListener('change', aplicarPrefijoTipoContenido);
+
 /* ─── Cambio de modo: single / album / podcast ─── */
 uploadModeBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -2402,6 +2428,9 @@ podcastImagenInput?.addEventListener('input', () => {
 
 /* ─── Publicar Podcast ─── */
 async function publicarPodcast() {
+  // 🆕 Garantizar que el nombre ya tenga el prefijo del tipo antes de validar
+  aplicarPrefijoTipoContenido();
+
   if (!usuarioActual) {
     mostrarStatus('Debes iniciar sesión primero', 'error');
     return;
@@ -2429,9 +2458,27 @@ async function publicarPodcast() {
   ).map(inp => inp.value.trim());
 
   /* Validaciones */
-  if (!nombre)   { mostrarStatus('Escribe el nombre del programa.', 'error'); podcastNombreInput?.focus(); return; }
-  if (!tipo)     { mostrarStatus('Selecciona el tipo de contenido.', 'error'); podcastTipoContenidoInput?.focus(); return; }
-  if (!audioRaw) { mostrarStatus('Pega la URL de audio de Dropbox.', 'error'); podcastAudioInput?.focus(); return; }
+  if (!nombre || nombre === 'Podcast o Programa') {
+    mostrarStatus('Escribe el nombre del programa.', 'error');
+    podcastNombreInput?.focus();
+    return;
+  }
+  if (!tipo) {
+    mostrarStatus('Selecciona el tipo de contenido.', 'error');
+    podcastTipoContenidoInput?.focus();
+    return;
+  }
+  // 🆕 El nombre final debe empezar con la palabra del tipo
+  if (!nombre.toLowerCase().startsWith(tipo.toLowerCase())) {
+    mostrarStatus(`El nombre debe comenzar con "${tipo}".`, 'error');
+    podcastNombreInput?.focus();
+    return;
+  }
+  if (!audioRaw) {
+    mostrarStatus('Pega la URL de audio de Dropbox.', 'error');
+    podcastAudioInput?.focus();
+    return;
+  }
   if (!duracionPodcastSeg || duracionPodcastSeg <= 0) {
     mostrarStatus('No se pudo validar la duración del audio. Revisa el enlace.', 'error');
     return;
