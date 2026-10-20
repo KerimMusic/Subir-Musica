@@ -1124,7 +1124,7 @@ document.getElementById('formCancion').addEventListener('reset', () => {
 
   // 🆕 Reset del podcast
   if (podcastNombreInput)        podcastNombreInput.value        = 'Podcast o Programa';
-  if (podcastTituloInput)        podcastTituloInput.value        = '';
+  if (podcastTituloInput)        podcastTituloInput.value        = 'Podcast o Programa';
   if (podcastAudioInput)         podcastAudioInput.value         = '';
   if (podcastImagenInput)        podcastImagenInput.value        = '';
   if (podcastDiaInput)           podcastDiaInput.value           = '';
@@ -1891,6 +1891,15 @@ const podcastRepeticionesCont   = document.getElementById('podcastRepeticionesCo
 let duracionPodcastSeg = 0;
 let detectandoAudio = false;
 
+/* 🆕 Sincroniza el Título del programa con el Nombre del programa.
+   El campo Título es readonly y solo refleja el Nombre. */
+function sincronizarTituloPodcast() {
+  if (!podcastTituloInput) return;
+  const nombre = (podcastNombreInput?.value || '').trim();
+  podcastTituloInput.value = nombre;
+}
+podcastNombreInput?.addEventListener('input', sincronizarTituloPodcast);
+
 /* ─── Cambio de modo: single / album / podcast ─── */
 uploadModeBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -2343,6 +2352,9 @@ podcastRepeticionesInput?.addEventListener('input', (e) => {
 /* Inicializar con 1 repetición */
 renderRepeticionesPodcast(1);
 
+/* 🆕 Sincronizar al cargar la página */
+sincronizarTituloPodcast();
+
 /* 🆕 Al enfocar el campo, si aún tiene el texto por defecto, se selecciona
    para que el usuario pueda reemplazarlo escribiendo directamente. */
 podcastNombreInput?.addEventListener('focus', function () {
@@ -2402,6 +2414,9 @@ podcastImagenInput?.addEventListener('input', () => {
 
 /* ─── Publicar Podcast ─── */
 async function publicarPodcast() {
+  // 🆕 Asegurar que el Título refleje el Nombre antes de validar
+  sincronizarTituloPodcast();
+
   if (!usuarioActual) {
     mostrarStatus('Debes iniciar sesión primero', 'error');
     return;
@@ -2515,7 +2530,7 @@ async function publicarPodcast() {
 
     // Reset
     if (podcastNombreInput)       podcastNombreInput.value       = 'Podcast o Programa';
-    if (podcastTituloInput)       podcastTituloInput.value       = '';
+    if (podcastTituloInput)       podcastTituloInput.value       = 'Podcast o Programa';
     if (podcastAudioInput)        podcastAudioInput.value        = '';
     if (podcastImagenInput)       podcastImagenInput.value       = '';
     if (podcastDiaInput)          podcastDiaInput.value          = '';
