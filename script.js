@@ -1123,15 +1123,15 @@ document.getElementById('formCancion').addEventListener('reset', () => {
   cargarColaboradoresEn(collabContainerForm, []);
 
   // 🆕 Reset del podcast
-  if (podcastNombreInput)        podcastNombreInput.value        = 'Podcast o Programa';
-  if (podcastTituloInput)        podcastTituloInput.value        = 'Podcast o Programa';
-  if (podcastAudioInput)         podcastAudioInput.value         = '';
-  if (podcastImagenInput)        podcastImagenInput.value        = '';
-  if (podcastDiaInput)           podcastDiaInput.value           = '';
-  if (podcastMesInput)           podcastMesInput.value           = '';
-  if (podcastAnioInput)          podcastAnioInput.value          = '';
-  if (podcastRepeticionesInput)  podcastRepeticionesInput.value  = 1;
-  if (podcastCoverPreview)       podcastCoverPreview.src         = PLACEHOLDER;
+  if (podcastNombreInput)          podcastNombreInput.value          = 'Podcast o Programa';
+  if (podcastTipoContenidoInput)   podcastTipoContenidoInput.value   = '';
+  if (podcastAudioInput)           podcastAudioInput.value           = '';
+  if (podcastImagenInput)          podcastImagenInput.value          = '';
+  if (podcastDiaInput)             podcastDiaInput.value             = '';
+  if (podcastMesInput)             podcastMesInput.value             = '';
+  if (podcastAnioInput)            podcastAnioInput.value            = '';
+  if (podcastRepeticionesInput)    podcastRepeticionesInput.value    = 1;
+  if (podcastCoverPreview)         podcastCoverPreview.src           = PLACEHOLDER;
   if (podcastAudioInfo) {
     podcastAudioInfo.className = 'podcast-info';
     podcastAudioInfo.textContent = 'Esperando enlace de audio…';
@@ -1877,7 +1877,7 @@ let unsubscribeBeatsSusc = null;
 const podcastModeWrap           = document.getElementById('podcastModeWrap');
 const podcastSubmitBtn          = document.getElementById('podcastSubmitBtn');
 const podcastNombreInput        = document.getElementById('podcastNombre');
-const podcastTituloInput        = document.getElementById('podcastTitulo');
+const podcastTipoContenidoInput = document.getElementById('podcastTipoContenido');
 const podcastAudioInput         = document.getElementById('podcastAudio');
 const podcastImagenInput        = document.getElementById('podcastImagen');
 const podcastAudioInfo          = document.getElementById('podcastAudioInfo');
@@ -1890,15 +1890,6 @@ const podcastRepeticionesCont   = document.getElementById('podcastRepeticionesCo
 
 let duracionPodcastSeg = 0;
 let detectandoAudio = false;
-
-/* 🆕 Sincroniza el Título del programa con el Nombre del programa.
-   El campo Título es readonly y solo refleja el Nombre. */
-function sincronizarTituloPodcast() {
-  if (!podcastTituloInput) return;
-  const nombre = (podcastNombreInput?.value || '').trim();
-  podcastTituloInput.value = nombre;
-}
-podcastNombreInput?.addEventListener('input', sincronizarTituloPodcast);
 
 /* ─── Cambio de modo: single / album / podcast ─── */
 uploadModeBtns.forEach(btn => {
@@ -2352,9 +2343,6 @@ podcastRepeticionesInput?.addEventListener('input', (e) => {
 /* Inicializar con 1 repetición */
 renderRepeticionesPodcast(1);
 
-/* 🆕 Sincronizar al cargar la página */
-sincronizarTituloPodcast();
-
 /* 🆕 Al enfocar el campo, si aún tiene el texto por defecto, se selecciona
    para que el usuario pueda reemplazarlo escribiendo directamente. */
 podcastNombreInput?.addEventListener('focus', function () {
@@ -2414,9 +2402,6 @@ podcastImagenInput?.addEventListener('input', () => {
 
 /* ─── Publicar Podcast ─── */
 async function publicarPodcast() {
-  // 🆕 Asegurar que el Título refleje el Nombre antes de validar
-  sincronizarTituloPodcast();
-
   if (!usuarioActual) {
     mostrarStatus('Debes iniciar sesión primero', 'error');
     return;
@@ -2432,7 +2417,7 @@ async function publicarPodcast() {
   }
 
   const nombre    = (podcastNombreInput?.value || '').trim();
-  const titulo    = (podcastTituloInput?.value || '').trim();
+  const tipo      = (podcastTipoContenidoInput?.value || '').trim();
   const audioRaw  = (podcastAudioInput?.value  || '').trim();
   const imagenRaw = (podcastImagenInput?.value || '').trim();
   const dia       = (podcastDiaInput?.value    || '').trim();
@@ -2445,7 +2430,7 @@ async function publicarPodcast() {
 
   /* Validaciones */
   if (!nombre)   { mostrarStatus('Escribe el nombre del programa.', 'error'); podcastNombreInput?.focus(); return; }
-  if (!titulo)   { mostrarStatus('Escribe el título del programa.', 'error'); podcastTituloInput?.focus(); return; }
+  if (!tipo)     { mostrarStatus('Selecciona el tipo de contenido.', 'error'); podcastTipoContenidoInput?.focus(); return; }
   if (!audioRaw) { mostrarStatus('Pega la URL de audio de Dropbox.', 'error'); podcastAudioInput?.focus(); return; }
   if (!duracionPodcastSeg || duracionPodcastSeg <= 0) {
     mostrarStatus('No se pudo validar la duración del audio. Revisa el enlace.', 'error');
@@ -2500,8 +2485,9 @@ async function publicarPodcast() {
     const uid = usuarioActual.uid;
     await addDoc(collection(db, 'historial_usuarios', uid, 'canciones'), {
       artista: nombre,
-      titulo,
+      titulo: nombre,
       album: nombre,
+      tipoContenido: tipo,
       genero: 'Podcast',
       subgenero: '',
       colaboradores: [],
@@ -2524,20 +2510,20 @@ async function publicarPodcast() {
       fecha: serverTimestamp()
     });
 
-    await asegurarRegistroOyentes(titulo);
+    await asegurarRegistroOyentes(nombre);
 
     mostrarStatus('✅ Podcast publicado correctamente', 'ok');
 
     // Reset
-    if (podcastNombreInput)       podcastNombreInput.value       = 'Podcast o Programa';
-    if (podcastTituloInput)       podcastTituloInput.value       = 'Podcast o Programa';
-    if (podcastAudioInput)        podcastAudioInput.value        = '';
-    if (podcastImagenInput)       podcastImagenInput.value       = '';
-    if (podcastDiaInput)          podcastDiaInput.value          = '';
-    if (podcastMesInput)          podcastMesInput.value          = '';
-    if (podcastAnioInput)         podcastAnioInput.value         = '';
-    if (podcastRepeticionesInput) podcastRepeticionesInput.value = 1;
-    if (podcastCoverPreview)      podcastCoverPreview.src        = PLACEHOLDER;
+    if (podcastNombreInput)         podcastNombreInput.value         = 'Podcast o Programa';
+    if (podcastTipoContenidoInput)  podcastTipoContenidoInput.value  = '';
+    if (podcastAudioInput)          podcastAudioInput.value          = '';
+    if (podcastImagenInput)         podcastImagenInput.value         = '';
+    if (podcastDiaInput)            podcastDiaInput.value            = '';
+    if (podcastMesInput)            podcastMesInput.value            = '';
+    if (podcastAnioInput)           podcastAnioInput.value           = '';
+    if (podcastRepeticionesInput)   podcastRepeticionesInput.value   = 1;
+    if (podcastCoverPreview)        podcastCoverPreview.src          = PLACEHOLDER;
     if (podcastAudioInfo) {
       podcastAudioInfo.className = 'podcast-info';
       podcastAudioInfo.textContent = 'Esperando enlace de audio…';
